@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Balero 3D · Tradición Mexicana</title>
+  <style>
+    @font-face {
+      font-family: "JakartaLocal";
+      src: url("../fonts/PlusJakartaSans.ttf") format("truetype");
+      font-weight: 200 800;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "MonoLocal";
+      src: url("../fonts/JetBrainsMono.ttf") format("truetype");
+      font-weight: 100 800;
+      font-display: swap;
+    }
+
+    :root {
+      --ink: #1a110c;
+      --paper: #fbf5e8;
+      --panel: rgba(252, 246, 234, 0.90);
+      --border: rgba(26, 17, 12, 0.16);
+      --crimson: #c8142b;
+      --cempasuchil: #f7a400;
+      --emerald: #0e8a4d;
+      --amber: #d97b1e;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "JakartaLocal", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: transparent;
+    }
+
+    .studio {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 345px;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    body[data-backdrop="checker"] .stage {
+      background-color: #f4efe4;
+      background-image:
+        linear-gradient(45deg, #e7dfd0 25%, transparent 25%),
+        linear-gradient(-45deg, #e7dfd0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e7dfd0 75%),
+        linear-gradient(-45deg, transparent 75%, #e7dfd0 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0;
+    }
+
+    body[data-backdrop="warm"] .stage {
+      background: radial-gradient(circle at 50% 42%, #fff6df 0%, #f1d49e 55%, #c78b46 100%);
+    }
+
+    body[data-backdrop="pure"] .stage {
+      background: transparent;
+    }
+
+    #balero-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #balero-canvas:active {
+      cursor: grabbing;
+    }
+
+    .badge-top {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      box-shadow: 0 4px 0 var(--ink);
+      font-size: 0.84rem;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    .pose-pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      color: #fff;
+      font-family: "MonoLocal", monospace;
+      font-size: 0.76rem;
+      letter-spacing: 0.03em;
+      background: var(--crimson);
+      transition: background-color 0.2s ease;
+    }
+
+    .hint-bottom {
+      position: absolute;
+      bottom: 18px;
+      left: 20px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(251, 245, 232, 0.85);
+      border: 1.5px solid var(--border);
+      font-size: 0.78rem;
+      color: #4c3828;
+      pointer-events: none;
+    }
+
+    .controls {
+      background: var(--paper);
+      border-left: 2.5px solid var(--ink);
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .controls h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+    }
+
+    .controls p.subtitle {
+      margin: 5px 0 0;
+      font-size: 0.83rem;
+      line-height: 1.45;
+      color: #5a4332;
+    }
+
+    .group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1.5px dashed rgba(26, 17, 12, 0.16);
+    }
+
+    .group-label {
+      font-size: 0.73rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b4f3a;
+    }
+
+    button {
+      appearance: none;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.86rem;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid var(--ink);
+      background: #fffaf0;
+      color: var(--ink);
+      box-shadow: 0 3px 0 var(--ink);
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+    }
+
+    button:hover {
+      background: #fff2d6;
+    }
+
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+
+    .btn-primary {
+      background: #ffbf3c;
+      font-size: 0.95rem;
+      padding: 12px 16px;
+    }
+
+    .btn-primary:hover {
+      background: #f5ae1e;
+    }
+
+    .pose-grid,
+    .backdrop-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .pose-grid button[aria-pressed="true"],
+    .backdrop-grid button[aria-pressed="true"] {
+      background: var(--ink);
+      color: #fffaf0;
+    }
+
+    .row-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--ink);
+    }
+
+    .download-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.86rem;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 2px solid var(--ink);
+      background: #e9f5ee;
+      color: var(--ink);
+      box-shadow: 0 3px 0 var(--ink);
+    }
+
+    .download-link:hover {
+      background: #d6efe0;
+    }
+
+    .specs {
+      margin-top: auto;
+      font-family: "MonoLocal", monospace;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: #634b38;
+      background: rgba(26, 17, 12, 0.05);
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    body.is-embed .studio {
+      grid-template-columns: 1fr;
+    }
+    body.is-embed .controls,
+    body.is-embed .badge-top,
+    body.is-embed .hint-bottom {
+      display: none;
+    }
+
+    @media (max-width: 820px) {
+      .studio {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      }
+      .controls {
+        border-left: 0;
+        border-top: 2.5px solid var(--ink);
+        max-height: 46vh;
+      }
+    }
+  </style>
+</head>
+<body data-backdrop="checker">
+  <div class="studio">
+    <main class="stage" aria-label="Visor 3D del balero tradicional mexicano">
+      <canvas id="balero-canvas"></canvas>
+      <div class="badge-top">
+        <span>Estado:</span>
+        <span class="pose-pill" id="active-pose-pill">EN VUELO</span>
+      </div>
+      <div class="hint-bottom">Arrastra para rotar e inspeccionar el hueco central, las flores y la punta negra</div>
+    </main>
+
+    <aside class="controls" aria-label="Controles del balero 3D">
+      <div>
+        <h1>El Balero Tradicional 3D</h1>
+        <p class="subtitle">Estética cel-shaded estilo animación mexicana con barril color ámbar cálido, flores tradicionales, hueco central definido, cordón trenzado y mango con punta negra.</p>
+      </div>
+
+      <div class="group">
+        <span class="group-label">Animación y poses (Rig WebGL)</span>
+        <button type="button" class="btn-primary" id="btn-play-trick">¡Ensartar balero! (Capirucho)</button>
+        <div class="pose-grid" role="group" aria-label="Poses del balero">
+          <button type="button" data-pose="showcase" aria-pressed="true">En vuelo</button>
+          <button type="button" data-pose="landed" aria-pressed="false">Ensartado</button>
+          <button type="button" data-pose="open" aria-pressed="false">Abierto</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="group-label">Cámara y contorno Toon</span>
+        <label class="row-inline" for="toggle-autorotate">
+          <span>Rotación continua (eje Y)</span>
+          <input type="checkbox" id="toggle-autorotate" checked>
+        </label>
+        <label class="row-inline" for="outline-slider">
+          <span>Contorno de tinta negra</span>
+          <span id="outline-value">0.030</span>
+        </label>
+        <input type="range" id="outline-slider" min="0" max="0.060" step="0.002" value="0.030">
+        <button type="button" id="btn-reset-cam">Restablecer ángulo</button>
+      </div>
+
+      <div class="group">
+        <span class="group-label">Fondo del visor (Canvas RGBA transparente)</span>
+        <div class="backdrop-grid" role="group" aria-label="Fondo de previsualización">
+          <button type="button" data-bg="checker" aria-pressed="true">Damero</button>
+          <button type="button" data-bg="warm" aria-pressed="false">Cálido</button>
+          <button type="button" data-bg="pure" aria-pressed="false">Alpha puro</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <span class="group-label">Archivos 3D exportables</span>
+        <div class="download-stack">
+          <a class="download-link" href="balero.glb" download="balero-mexicano-toon.glb" id="link-glb">Descargar balero.glb (glTF 2.0)</a>
+          <button type="button" id="btn-shot-png">Capturar PNG transparente</button>
+        </div>
+      </div>
+
+      <div class="specs">
+        Nodos GLB: Balero_Barril · Balero_Mango · Balero_Cordon<br>
+        Paleta: Ámbar · Carmesí · Cempasúchil · Negro · Verde<br>
+        Textura: 2048×2048 hand-painted embebida
+      </div>
+    </aside>
+  </div>
+
+  <script src="balero-3d.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("embed") === "1") {
+        document.body.classList.add("is-embed");
+        document.body.dataset.backdrop = "pure";
+      }
+
+      const canvas = document.getElementById("balero-canvas");
+      const pill = document.getElementById("active-pose-pill");
+      const poseLabels = {
+        showcase: { text: "EN VUELO", color: "#c8142b" },
+        landed: { text: "¡ENSARTADO!", color: "#0e8a4d" },
+        open: { text: "VISTA DE PIEZAS", color: "#d97b1e" }
+      };
+
+      function updatePoseUI(poseName) {
+        const info = poseLabels[poseName] || poseLabels.showcase;
+        if (pill) {
+          pill.textContent = info.text;
+          pill.style.backgroundColor = info.color;
+        }
+        document.querySelectorAll("[data-pose]").forEach(b => {
+          b.setAttribute("aria-pressed", String(b.getAttribute("data-pose") === poseName));
+        });
+      }
+
+      const viewer = Balero3D.createViewer(canvas, {
+        outlineWidth: 0.030,
+        autoRotate: true,
+        pose: "showcase",
+        onPoseChange: updatePoseUI
+      });
+
+      document.getElementById("btn-play-trick").addEventListener("click", () => {
+        if (pill) {
+          pill.textContent = "¡CAPIRUCHO!";
+          pill.style.backgroundColor = "#f7a400";
+        }
+        viewer.playCapirucho();
+      });
+
+      document.querySelectorAll("[data-pose]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          viewer.setPose(btn.getAttribute("data-pose"));
+        });
+      });
+
+      const autoToggle = document.getElementById("toggle-autorotate");
+      autoToggle.addEventListener("change", () => {
+        viewer.setAutoRotate(autoToggle.checked);
+      });
+
+      const slider = document.getElementById("outline-slider");
+      const sliderVal = document.getElementById("outline-value");
+      slider.addEventListener("input", () => {
+        const v = Number(slider.value);
+        sliderVal.textContent = v.toFixed(3);
+        viewer.setOutlineWidth(v);
+      });
+
+      document.getElementById("btn-reset-cam").addEventListener("click", () => {
+        viewer.resetCamera();
+      });
+
+      document.querySelectorAll("[data-bg]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const mode = btn.getAttribute("data-bg");
+          document.body.dataset.backdrop = mode;
+          document.querySelectorAll("[data-bg]").forEach(b => {
+            b.setAttribute("aria-pressed", String(b === btn));
+          });
+        });
+      });
+
+      const glbLink = document.getElementById("link-glb");
+      if (window.location.protocol === "file:") {
+        glbLink.addEventListener("click", async e => {
+          e.preventDefault();
+          const blob = await viewer.exportGLB(true);
+          const url = URL.createObjectURL(blob);
+          const temp = document.createElement("a");
+          temp.href = url;
+          temp.download = "balero-mexicano-toon.glb";
+          temp.click();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+        });
+      }
+
+      document.getElementById("btn-shot-png").addEventListener("click", () => {
+        requestAnimationFrame(() => {
+          const url = canvas.toDataURL("image/png");
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "balero-3d-transparente.png";
+          a.click();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
