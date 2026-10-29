@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explora la participación ciudadana en las 32 entidades de México. Datos reales del INE, 2009–2024, con comparaciones por edad, sexo y tipo de sección.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <link rel="icon" href="data:,">
+  <title>¿Dónde participa México? · CCPC 2009–2024</title>
+  <style>@font-face{font-family:Manrope;src:url(data:font/ttf;base64,@@FONT@@) format('truetype');font-style:normal;font-weight:200 800;font-display:swap}@@CSS@@</style>
+</head>
+<body>
+  <a class="skip-link" href="#radiografia">Saltar a la radiografía</a>
+  <div class="app-shell">
+    <header class="page-header">
+      <div class="masthead"><span class="wordmark">Hackea la participación<span class="brand-dot" aria-hidden="true"></span></span><span>Datos abiertos del INE · CCPC</span></div>
+      <div class="introduction"><div><h1>¿Dónde participa México?</h1><p>Explora la participación por edad, sexo y territorio. Seis elecciones, 32 entidades, muchas historias.</p></div><a class="method-link" href="#metodologia">Cómo leer los datos <span aria-hidden="true">↗</span></a></div>
+    </header>
+
+    <main id="contenido">
+      <section class="filters" aria-label="Filtros del mapa">
+        <div class="filter"><label for="filter-year">Año de elección</label><select id="filter-year"><option value="2009">2009 · Intermedia</option><option value="2012">2012 · Presidencial</option><option value="2015">2015 · Intermedia</option><option value="2018">2018 · Presidencial</option><option value="2021">2021 · Intermedia</option><option value="2024" selected>2024 · Presidencial</option></select></div>
+        <div class="filter"><label for="filter-sex">Sexo registrado</label><select id="filter-sex"><option value="all">Todos</option><option value="1">Mujeres</option><option value="0">Hombres</option><option value="2">No binario · 2024</option></select></div>
+        <div class="filter"><label for="filter-section">Tipo de sección</label><select id="filter-section"><option value="all">Todas</option><option value="0">Urbana</option><option value="1">Mixta</option><option value="2">Rural</option></select></div>
+        <div class="filter"><label for="filter-age">Grupo de edad</label><select id="filter-age"><option value="all">Todos</option><option value="0">18-19 (Primovotantes)</option><option value="1">20-24</option><option value="2">25-29</option><option value="3">30-39</option><option value="4">40-49</option><option value="5">50-59</option><option value="6">60-69</option><option value="7">70+</option></select></div>
+      </section>
+
+      <nav class="modes" aria-label="Modo de mapa">
+        <button class="mode active" type="button" data-mode="participation" aria-pressed="true"><span>Participación ciudadana</span><small>Registros con marca de voto</small></button>
+        <button class="mode" type="button" data-mode="age" aria-pressed="false"><span>Después de los 18-19</span><small>La diferencia con 20-29 años</small></button>
+        <button class="mode" type="button" data-mode="election" aria-pressed="false"><span>Presidencial vs. intermedia</span><small>La brecha entre elecciones</small></button>
+        <button class="mode" type="button" data-mode="gender" aria-pressed="false"><span>Género e inclusión 2024</span><small>Mujeres, hombres y otras miradas</small></button>
+      </nav>
+
+      <p id="filter-scope" class="filter-scope" aria-live="polite"></p>
+      <div class="workbench">
+        <div class="map-column">
+          <section class="map-region" aria-labelledby="map-title">
+            <div class="map-heading"><div><h2 id="map-title">Participación ciudadana</h2><p id="map-description"></p></div><span id="period-tag" class="period-tag">2024</span></div>
+            <div class="map-viewport">@@MAP@@</div>
+            <div class="legend" aria-label="Escala del mapa"><div class="legend-top"><strong id="legend-title">Participación (%)</strong><span class="no-data-key">Sin dato comparable</span></div><div id="legend-gradient" class="legend-gradient"></div><div class="legend-ticks" id="legend-ticks"></div></div>
+            <p class="map-instruction">Selecciona una entidad en el mapa o en la lista. Las islas conservan los datos de su entidad.</p>
+          </section>
+
+          <section class="reading-note" aria-labelledby="reading-title"><h2 id="reading-title">Una cifra, con contexto.</h2><p id="map-insight"></p><p class="subtle">Los porcentajes se calculan sobre conteos sumados. Los registros sin información se muestran por separado.</p></section>
+
+        </div>
+
+        <aside id="radiografia" class="radiography" aria-labelledby="panel-title">
+          <div class="territory-control"><label for="select-state">Territorio a explorar</label><select id="select-state"><option value="0">Total Nacional</option></select><button id="national-button" class="text-button" type="button" disabled>Volver a Total Nacional</button></div>
+          <div class="panel-heading"><h2 id="panel-title" tabindex="-1">Total Nacional</h2><p id="panel-scope"></p></div>
+          <nav class="panel-links" aria-label="Secciones de la radiografía"><a href="#stat-ln">Conteos</a><a href="#age-title">Curva de edad</a><a href="#history-title">Evolución</a><a href="#inclusion-title">Inclusión</a></nav>
+          <div id="small-base" class="base-warning" role="status" hidden>LN &lt; 100: base pequeña. Consulta los conteos junto al porcentaje.</div>
+          <div id="empty-state" class="base-warning" role="status" hidden>No hay registros para esta combinación. Cambia uno de los filtros.</div>
+          <dl class="stat-grid"><div class="stat stat-ln"><dt>LN · Lista nominal</dt><dd id="stat-ln">—</dd><small id="stat-ln-note">Base de los porcentajes</small></div><div class="stat stat-sv"><dt>SV · Sí votó</dt><dd id="stat-sv">—</dd><small id="stat-sv-rate">Con marca de voto</small></div><div class="stat"><dt>NV · No votó</dt><dd id="stat-nv">—</dd><small id="stat-nv-rate">Sin marca de voto</small></div><div class="stat"><dt>NS · No especificado</dt><dd id="stat-ns">—</dd><small id="stat-ns-rate">Información no especificada</small></div></dl>
+          <p class="method-note">NS no se reclasifica como abstención. “Sí votó” y “No votó” describen la marca en los cuadernillos, no el cómputo de boletas.</p>
+          <section id="state-story" class="state-story" aria-labelledby="story-title"><h3 id="story-title"></h3><p id="story-text"></p><div id="comparison-values"></div></section>
+          <section id="gender-detail" class="gender-detail" aria-labelledby="gender-detail-title" hidden><h3 id="gender-detail-title">Mujeres − hombres, por sección</h3><div id="gender-detail-body"></div></section>
+          <section class="chart-panel" data-chart="age" aria-labelledby="age-title"><div class="section-heading"><h3 id="age-title">La curva de la edad</h3><span id="age-period"></span></div><p id="age-scope" class="chart-scope"></p><div class="chart-key"><span class="key-local">Territorio seleccionado</span><span class="key-national">Total nacional</span></div><div id="age-chart" class="chart-container"></div><p class="chart-hint">Pasa el cursor o enfoca un punto para consultar sus conteos.</p></section>
+        <section class="chart-panel" data-chart="history" aria-labelledby="history-title"><div class="section-heading"><h3 id="history-title">Evolución 2009–2024</h3></div><p id="history-scope" class="chart-scope"></p><div class="chart-key"><span class="key-presidential">Presidencial</span><span class="key-intermediate">Intermedia</span><span class="key-national">Total nacional</span></div><div id="history-chart" class="chart-container"></div><p class="chart-hint">Cada elección mantiene su propio denominador. Son cortes transversales, sin seguimiento individual.</p></section>
+        <section class="breakdown" aria-labelledby="breakdown-title"><h3 id="breakdown-title">Sección y sexo, en detalle</h3><p id="breakdown-scope" class="chart-scope"></p><div class="table-scroll" tabindex="0" role="region" aria-label="Conteos y participación por sección y sexo"><table><thead><tr><th scope="col">Sección / sexo</th><th scope="col">LN</th><th scope="col">SV</th><th scope="col">Participación</th></tr></thead><tbody id="breakdown-body"></tbody></table></div></section>
+          <section class="inclusion" aria-labelledby="inclusion-title"><h3 id="inclusion-title">Otras miradas de 2024</h3><p class="inclusion-caption">Modalidades especiales · conteos de registros</p><dl id="special-counts" class="special-counts"></dl><p id="special-scope" class="method-note"></p><div id="nonbinary-summary" class="nonbinary-summary"></div></section>
+        </aside>
+      </div>
+
+      <details id="municipal-detail" class="disclosure"><summary>Acercamiento municipal <span>Conteos por año y sección</span></summary><div class="disclosure-body"><p>Este cubo no tiene desglose por edad ni sexo. Aquí solo se aplican la entidad, el año y el tipo de sección; sus conteos pueden diferir de las tarjetas demográficas. En el modo de comparación histórica se muestra 2024, sin combinar límites municipales de distintos años.</p><label for="municipal-search">Buscar municipio</label><input id="municipal-search" type="search" placeholder="Nombre del municipio" autocomplete="off"><p id="municipal-status" role="status"></p><div class="table-scroll" tabindex="0" role="region" aria-label="Detalle municipal"><table><thead><tr><th scope="col">Municipio / clave INE</th><th scope="col">LN</th><th scope="col">SV</th><th scope="col">Participación</th></tr></thead><tbody id="municipal-body"></tbody></table></div></div></details>
+
+      <details id="metodologia" class="disclosure methodology"><summary>Cómo leer estos datos <span>Fuentes, fórmulas y límites</span></summary><div class="disclosure-body methodology-grid"><section><h2>Qué se mide</h2><p>Fuente: INE / DECEyEC, Conteos Censales de Participación Ciudadana 2009–2024. LN es la lista nominal capturada; SV son registros con marca de voto; NV, sin marca; NS, registros sin información de participación.</p><p><strong>Participación = ΣSV / ΣLN × 100.</strong> Abstención = ΣNV / ΣLN × 100. No especificado = ΣNS / ΣLN × 100. Nunca se promedian porcentajes. Las diferencias se calculan antes de redondear; se presentan con dos decimales. Con LN=0, no hay tasa.</p><p>Los datos proceden de cuadernillos de lista nominal. Según los diccionarios recibidos, no contemplan casillas especiales ni voto desde el extranjero; no equivalen automáticamente a los porcentajes de los cómputos distritales.</p></section><section><h2>Cómo se comparan</h2><p>La caída por edad es la tasa de 18-19 menos la tasa conjunta de 20-24 y 25-29, ponderada por sus LN. La recuperación es el primer grupo de 30 años o más que alcanza el nivel de 18-19. La etiqueta “primovotantes” refiere a la edad, no acredita el primer voto individual.</p><p>La brecha electoral reúne tres presidenciales (2012, 2018, 2024) y tres intermedias (2009, 2015, 2021). Los conteos acumulados son registros persona-elección, no personas únicas. La brecha de género es la tasa de mujeres menos la de hombres en 2024.</p><p>Las diferencias son descriptivas, sin interpretación causal ni seguimiento individual. Si los grupos no tienen denominador comparable, el mapa muestra “Sin dato”; una ausencia no se convierte en cero.</p></section><section><h2>Inclusión y bases pequeñas</h2><p>“No binario” es la categoría registrada en SEXO, disponible en estos datos en 2024. Una LN menor de 100 se señala como base pequeña; un porcentaje alto puede corresponder a muy pocos registros.</p><p>Los archivos de Voto Anticipado y Prisión Preventiva carecen de EDAD, LN, SV, NV y NS. Se cuentan sus registros, sin calcular tasas ni sumarlos al universo ordinario. ESTADO se homologa a EDOCVE en Prisión Preventiva. No se infieren valores a partir de DEF o DEL.</p><p>Las modalidades no admiten filtros por edad ni sección. Se aplica el sexo cuando el modo lo permite; la categoría No binario se presenta por separado del total de modalidades.</p></section><section><h2>Mapa y reproducibilidad</h2><p>El SVG aportado contiene 84 piezas con relleno, agrupadas en 32 entidades. Su correspondencia se verificó con referencias geográficas independientes del INEGI. La cartografía es ilustrativa: no reconstruye límites electorales o municipales históricos.</p><p>La escala de participación es fija, de 0 a 100%. Las brechas usan una escala divergente centrada en cero; los extremos del color se saturan en ±25 pp para edad, ±30 pp para tipo de elección y ±20 pp para género. El tooltip conserva el valor real.</p><p>Este archivo incluye datos, tipografía y código para funcionar sin conexión. Para regenerarlo tras actualizar los cubos: ejecutar <code>04_construir_mapa.py</code>. La tabla municipal se carga al desplegarla.</p><details class="source-details"><summary>Archivos fuente y huellas SHA-256</summary><ul id="source-list"></ul><p class="fingerprint">SVG: <code>@@MAP_SOURCE@@</code></p><p><a href="https://www.inegi.org.mx/servicios/catalogounico.html" target="_blank" rel="noopener noreferrer">Referencia geográfica del INEGI (requiere conexión)</a></p></details></section></div></details>
+    </main>
+    <footer class="page-footer"><span>Hackea la participación · Reto 3</span><span>Prototipo ciudadano con datos del INE.</span><span>2009–2024</span></footer>
+  </div>
+  <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+  <div id="live-status" class="sr-only" role="status" aria-live="polite"></div>
+  <noscript><p>Activa JavaScript en tu navegador para explorar el mapa y filtrar los datos. Este archivo funciona sin conexión.</p></noscript>
+  <script id="ccpc-data" type="application/json">@@DATA@@</script>
+  <script id="municipal-data" type="application/json">@@MUNICIPAL@@</script>
+  <script>@@ENGINE@@</script>
+  <script>@@APP@@</script>
+</body>
+</html>

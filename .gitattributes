@@ -2,7 +2,12 @@
 *.py text eol=lf
 *.md text eol=lf
 *.html text eol=lf
+*.js text eol=lf
+*.cjs text eol=lf
+*.json text eol=lf
 *.csv text eol=lf
+assets/mapas/*.svg -text
+assets/fonts/OFL-Manrope.txt -text -whitespace
 requirements.txt text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf

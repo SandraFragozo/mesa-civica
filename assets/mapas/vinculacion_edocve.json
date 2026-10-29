@@ -1,0 +1,724 @@
+{
+  "source_file": "Mapa MX Escala Grises.svg",
+  "source_sha256": "5932e146bad7d50b3c34228049c53e1347062ba0a6653915e080e83bc4aaa290",
+  "method": "Correspondencia geográfica de las 32 superficies principales, verificada contra centroides independientes del INEGI mediante transformación afín de longitud/latitud. Piezas insulares agrupadas con su entidad; nunca por proximidad al continente. Índices base cero de los trazos con relleno del SVG original.",
+  "official_reference_url": "https://gaia.inegi.org.mx/wscatgeo/v2/geo/mgee/",
+  "official_reference_version": "INEGI. Marco Geoestadístico, diciembre de 2025",
+  "official_reference_sha256": "170c3ea5ff472f08ece97970dc90ad4ba8c6f503e33859655f315091c105cc91",
+  "affine_lonlat_to_svg": [
+    [
+      137.56865446605485,
+      -0.24902873257271244
+    ],
+    [
+      -0.034507610196733055,
+      -150.20207092649653
+    ],
+    [
+      16285.26931871812,
+      4887.073598256612
+    ]
+  ],
+  "borders_source_file": "Mapa MX Bordes.svg",
+  "borders_source_sha256": "4f278f6c0d225313ead37364108a3245e1782cc1edd3882a5b31decd0c2fa9af",
+  "borders_extra_path": {
+    "index": 84,
+    "equivalent_grayscale_path": 58,
+    "edocve": 3,
+    "reason": "Repetición del mismo islote, con orden cíclico diferente de sus vértices."
+  },
+  "entities": [
+    {
+      "edocve": 1,
+      "name": "Aguascalientes",
+      "principal_path": 80,
+      "path_indices": [
+        80
+      ],
+      "official_centroid_lonlat": [
+        -102.36193776189599,
+        22.006441075257765
+      ],
+      "official_reference_svg": [
+        2202.715882585597,
+        1607.1516386555104
+      ],
+      "svg_centroid": [
+        2202.2926366001293,
+        1605.4363955615597
+      ]
+    },
+    {
+      "edocve": 2,
+      "name": "Baja California",
+      "principal_path": 8,
+      "path_indices": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "official_centroid_lonlat": [
+        -115.11057327807495,
+        30.58562338008968
+      ],
+      "official_reference_svg": [
+        448.607201267916,
+        321.7154661584291
+      ],
+      "svg_centroid": [
+        449.75848545946997,
+        322.41164707872724
+      ]
+    },
+    {
+      "edocve": 3,
+      "name": "Baja California Sur",
+      "principal_path": 51,
+      "path_indices": [
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "official_centroid_lonlat": [
+        -112.06022709933058,
+        25.93622860311463
+      ],
+      "official_reference_svg": [
+        868.3996602360639,
+        1019.3045663721173
+      ],
+      "svg_centroid": [
+        868.5980042713875,
+        1018.4903056646215
+      ]
+    },
+    {
+      "edocve": 4,
+      "name": "Campeche",
+      "principal_path": 30,
+      "path_indices": [
+        30,
+        31
+      ],
+      "official_centroid_lonlat": [
+        -90.36024548768839,
+        18.840150717775636
+      ],
+      "official_reference_svg": [
+        3853.8818011774056,
+        2079.7462412881496
+      ],
+      "svg_centroid": [
+        3861.049243388599,
+        2083.898442023286
+      ]
+    },
+    {
+      "edocve": 5,
+      "name": "Coahuila",
+      "principal_path": 22,
+      "path_indices": [
+        22
+      ],
+      "official_centroid_lonlat": [
+        -102.04403867802858,
+        27.295442971774374
+      ],
+      "official_reference_svg": [
+        2246.266320993451,
+        812.6534346586063
+      ],
+      "svg_centroid": [
+        2247.0908596744002,
+        812.6673741192914
+      ]
+    },
+    {
+      "edocve": 6,
+      "name": "Colima",
+      "principal_path": 37,
+      "path_indices": [
+        34,
+        35,
+        36,
+        37
+      ],
+      "official_centroid_lonlat": [
+        -103.91343482872949,
+        19.140978090520026
+      ],
+      "official_reference_svg": [
+        1989.3773989729889,
+        2037.9364804744828
+      ],
+      "svg_centroid": [
+        1988.595962301552,
+        2038.5944276696962
+      ]
+    },
+    {
+      "edocve": 7,
+      "name": "Chiapas",
+      "principal_path": 33,
+      "path_indices": [
+        33
+      ],
+      "official_centroid_lonlat": [
+        -92.47295049486237,
+        16.485150241230933
+      ],
+      "official_reference_svg": [
+        3563.3210814952436,
+        2433.9983141482867
+      ],
+      "svg_centroid": [
+        3563.1762538400803,
+        2433.6222839341426
+      ]
+    },
+    {
+      "edocve": 8,
+      "name": "Chihuahua",
+      "principal_path": 21,
+      "path_indices": [
+        21
+      ],
+      "official_centroid_lonlat": [
+        -106.46893953135155,
+        28.808538061913737
+      ],
+      "official_reference_svg": [
+        1637.486451160552,
+        586.4853460622235
+      ],
+      "svg_centroid": [
+        1639.1382125883254,
+        587.1975160329483
+      ]
+    },
+    {
+      "edocve": 9,
+      "name": "Ciudad de México",
+      "principal_path": 83,
+      "path_indices": [
+        83
+      ],
+      "official_centroid_lonlat": [
+        -99.13958587013289,
+        19.278165367008356
+      ],
+      "official_reference_svg": [
+        2646.10464282624,
+        2016.141841885517
+      ],
+      "svg_centroid": [
+        2646.463367430307,
+        2018.482603078272
+      ]
+    },
+    {
+      "edocve": 10,
+      "name": "Durango",
+      "principal_path": 81,
+      "path_indices": [
+        81
+      ],
+      "official_centroid_lonlat": [
+        -104.91339857467602,
+        24.9236104032557
+      ],
+      "official_reference_svg": [
+        1851.6141871065302,
+        1169.6221513993796
+      ],
+      "svg_centroid": [
+        1851.0690336134148,
+        1168.9595148043559
+      ]
+    },
+    {
+      "edocve": 11,
+      "name": "Guanajuato",
+      "principal_path": 77,
+      "path_indices": [
+        77
+      ],
+      "official_centroid_lonlat": [
+        -101.01261435267578,
+        20.905432044099516
+      ],
+      "official_reference_svg": [
+        2388.3784816220395,
+        1772.1894549458261
+      ],
+      "svg_centroid": [
+        2386.1606225965493,
+        1775.0556400852738
+      ]
+    },
+    {
+      "edocve": 12,
+      "name": "Guerrero",
+      "principal_path": 70,
+      "path_indices": [
+        70
+      ],
+      "official_centroid_lonlat": [
+        -99.92187273195003,
+        17.66794728518751
+      ],
+      "official_reference_svg": [
+        2538.5420566174835,
+        2258.1947443240056
+      ],
+      "svg_centroid": [
+        2540.496243959471,
+        2258.383447752467
+      ]
+    },
+    {
+      "edocve": 13,
+      "name": "Hidalgo",
+      "principal_path": 76,
+      "path_indices": [
+        76
+      ],
+      "official_centroid_lonlat": [
+        -98.88711307754613,
+        20.479556677188977
+      ],
+      "official_reference_svg": [
+        2680.795528048664,
+        1835.6275061237434
+      ],
+      "svg_centroid": [
+        2682.8919554326276,
+        1837.093254695841
+      ]
+    },
+    {
+      "edocve": 14,
+      "name": "Jalisco",
+      "principal_path": 68,
+      "path_indices": [
+        68
+      ],
+      "official_centroid_lonlat": [
+        -103.61329528014245,
+        20.580745871156267
+      ],
+      "official_reference_svg": [
+        2030.6175098788099,
+        1821.605634798294
+      ],
+      "svg_centroid": [
+        2033.287030804481,
+        1817.7565977908391
+      ]
+    },
+    {
+      "edocve": 15,
+      "name": "Estado de México",
+      "principal_path": 72,
+      "path_indices": [
+        72
+      ],
+      "official_centroid_lonlat": [
+        -99.64536911560685,
+        19.355957487726698
+      ],
+      "official_reference_svg": [
+        2576.5220378747345,
+        2004.5832588124345
+      ],
+      "svg_centroid": [
+        2579.2705619061912,
+        2004.2201878669516
+      ]
+    },
+    {
+      "edocve": 16,
+      "name": "Michoacán",
+      "principal_path": 69,
+      "path_indices": [
+        69
+      ],
+      "official_centroid_lonlat": [
+        -101.87819719200195,
+        19.20700090313602
+      ],
+      "official_reference_svg": [
+        2269.3600238867893,
+        2027.5128846420098
+      ],
+      "svg_centroid": [
+        2272.2948028404694,
+        2028.2690859501583
+      ]
+    },
+    {
+      "edocve": 17,
+      "name": "Morelos",
+      "principal_path": 74,
+      "path_indices": [
+        74
+      ],
+      "official_centroid_lonlat": [
+        -99.07502271208256,
+        18.74268686196889
+      ],
+      "official_reference_svg": [
+        2655.004987690825,
+        2096.5557441976484
+      ],
+      "svg_centroid": [
+        2655.180101452524,
+        2095.6387288731803
+      ]
+    },
+    {
+      "edocve": 18,
+      "name": "Nayarit",
+      "principal_path": 42,
+      "path_indices": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "official_centroid_lonlat": [
+        -104.84103822447514,
+        21.80409762308049
+      ],
+      "official_reference_svg": [
+        1861.6763500513807,
+        1638.1614114570702
+      ],
+      "svg_centroid": [
+        1853.9183511849203,
+        1633.3368432671232
+      ]
+    },
+    {
+      "edocve": 19,
+      "name": "Nuevo León",
+      "principal_path": 24,
+      "path_indices": [
+        24
+      ],
+      "official_centroid_lonlat": [
+        -99.96896989649824,
+        25.57259026231795
+      ],
+      "official_reference_svg": [
+        2531.7901927228213,
+        1070.9127277716216
+      ],
+      "svg_centroid": [
+        2531.970516570474,
+        1073.487415293753
+      ]
+    },
+    {
+      "edocve": 20,
+      "name": "Oaxaca",
+      "principal_path": 71,
+      "path_indices": [
+        71
+      ],
+      "official_centroid_lonlat": [
+        -96.4301868140649,
+        16.961357989778065
+      ],
+      "official_reference_svg": [
+        3018.9129728669886,
+        2363.456389670325
+      ],
+      "svg_centroid": [
+        3017.5272161820963,
+        2364.283474195864
+      ]
+    },
+    {
+      "edocve": 21,
+      "name": "Puebla",
+      "principal_path": 73,
+      "path_indices": [
+        73
+      ],
+      "official_centroid_lonlat": [
+        -97.90009582100568,
+        19.006079956878974
+      ],
+      "official_reference_svg": [
+        2816.6290101260092,
+        2056.7009653198643
+      ],
+      "svg_centroid": [
+        2816.883496926736,
+        2054.558952354877
+      ]
+    },
+    {
+      "edocve": 22,
+      "name": "Querétaro",
+      "principal_path": 75,
+      "path_indices": [
+        75
+      ],
+      "official_centroid_lonlat": [
+        -99.84579640385205,
+        20.855176072088252
+      ],
+      "official_reference_svg": [
+        2548.897791062056,
+        1779.4474348234035
+      ],
+      "svg_centroid": [
+        2546.0511924522093,
+        1785.5532092541146
+      ]
+    },
+    {
+      "edocve": 23,
+      "name": "Quintana Roo",
+      "principal_path": 25,
+      "path_indices": [
+        25,
+        26,
+        27,
+        28,
+        29
+      ],
+      "official_centroid_lonlat": [
+        -88.1269724483923,
+        19.590602613859176
+      ],
+      "official_reference_svg": [
+        4161.084271947186,
+        1966.470663211221
+      ],
+      "svg_centroid": [
+        4158.859936035885,
+        1957.6922158233176
+      ]
+    },
+    {
+      "edocve": 24,
+      "name": "San Luis Potosí",
+      "principal_path": 78,
+      "path_indices": [
+        78
+      ],
+      "official_centroid_lonlat": [
+        -100.41650870435052,
+        22.585459882638837
+      ],
+      "official_reference_svg": [
+        2470.325959835989,
+        1519.6973469489726
+      ],
+      "svg_centroid": [
+        2467.625057167278,
+        1519.0976525381568
+      ]
+    },
+    {
+      "edocve": 25,
+      "name": "Sinaloa",
+      "principal_path": 64,
+      "path_indices": [
+        63,
+        64
+      ],
+      "official_centroid_lonlat": [
+        -107.50904235307921,
+        25.00124650135369
+      ],
+      "official_reference_svg": [
+        1494.532286002208,
+        1158.6074385667553
+      ],
+      "svg_centroid": [
+        1498.4688668964561,
+        1155.8085963625463
+      ]
+    },
+    {
+      "edocve": 26,
+      "name": "Sonora",
+      "principal_path": 0,
+      "path_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "official_centroid_lonlat": [
+        -110.79963660675178,
+        29.695591074641918
+      ],
+      "official_reference_svg": [
+        1041.687671518077,
+        454.3266145327061
+      ],
+      "svg_centroid": [
+        1042.4210339061165,
+        454.122201609713
+      ]
+    },
+    {
+      "edocve": 27,
+      "name": "Tabasco",
+      "principal_path": 32,
+      "path_indices": [
+        32
+      ],
+      "official_centroid_lonlat": [
+        -92.59408637652331,
+        17.937842061308352
+      ],
+      "official_reference_svg": [
+        3546.606452324526,
+        2215.831160669756
+      ],
+      "svg_centroid": [
+        3548.397608792859,
+        2217.141732174372
+      ]
+    },
+    {
+      "edocve": 28,
+      "name": "Tamaulipas",
+      "principal_path": 23,
+      "path_indices": [
+        23
+      ],
+      "official_centroid_lonlat": [
+        -98.64059690645074,
+        24.29111645699994
+      ],
+      "official_reference_svg": [
+        2714.576898191257,
+        1263.0619441263489
+      ],
+      "svg_centroid": [
+        2714.2315451547615,
+        1267.3640634381445
+      ]
+    },
+    {
+      "edocve": 29,
+      "name": "Tlaxcala",
+      "principal_path": 82,
+      "path_indices": [
+        82
+      ],
+      "official_centroid_lonlat": [
+        -98.16857816791837,
+        19.42854703852317
+      ],
+      "official_reference_svg": [
+        2779.6796765839663,
+        1993.3123945772027
+      ],
+      "svg_centroid": [
+        2779.723639313768,
+        1994.8330353830727
+      ]
+    },
+    {
+      "edocve": 30,
+      "name": "Veracruz",
+      "principal_path": 66,
+      "path_indices": [
+        66,
+        67
+      ],
+      "official_centroid_lonlat": [
+        -96.41851921561639,
+        19.39292927662946
+      ],
+      "official_reference_svg": [
+        3020.4341609722687,
+        1998.2264412125855
+      ],
+      "svg_centroid": [
+        3018.6872167259394,
+        1999.7507143746966
+      ]
+    },
+    {
+      "edocve": 31,
+      "name": "Yucatán",
+      "principal_path": 65,
+      "path_indices": [
+        65
+      ],
+      "official_centroid_lonlat": [
+        -88.92119529449063,
+        20.747035832123956
+      ],
+      "official_reference_svg": [
+        4051.7841979165223,
+        1792.969783248402
+      ],
+      "svg_centroid": [
+        4049.543634444625,
+        1791.128299605126
+      ]
+    },
+    {
+      "edocve": 32,
+      "name": "Zacatecas",
+      "principal_path": 79,
+      "path_indices": [
+        79
+      ],
+      "official_centroid_lonlat": [
+        -102.6605573012482,
+        23.289018881913563
+      ],
+      "official_reference_svg": [
+        2161.590935664639,
+        1414.5801608168522
+      ],
+      "svg_centroid": [
+        2156.0813913129673,
+        1412.4517272433147
+      ]
+    }
+  ]
+}
