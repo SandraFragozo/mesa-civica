@@ -6,7 +6,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const destination = path.resolve(root, "public");
 const html = await readFile(path.join(root, "index.html"), "utf8");
 if (!html.startsWith("<!doctype html>") || /@@[A-Z_]+@@/.test(html)) throw new Error("El HTML está incompleto. Regenera index.html con analysis/04_construir_mapa.py.");
-const files = new Map([["index.html", path.join(root, "index.html")]]);
+const files = new Map([["index.html", path.join(root, "index.html")], ["assets/pirinola/pirinola-3d.js", path.join(root, "assets/pirinola/pirinola-3d.js")]]);
 
 for (const match of html.matchAll(/<(?:img|script|link)\b[^>]*\b(?:src|href)=["']([^"']+)["']/gi)) {
   const source = match[1];

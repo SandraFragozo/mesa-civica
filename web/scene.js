@@ -30,6 +30,65 @@
   let sceneVisible = true;
   let scrollOverflow = "";
   let afterClose = null;
+  let pirinolaViewer = null;
+  let pirinolaLoading = null;
+  const pirinolaMessages = {
+    MITO: { title: "Te tocó un mito", text: "Aquí aparecerá una afirmación para contrastarla con los datos." },
+    REALIDAD: { title: "Te tocó una realidad", text: "Aquí aparecerá un hallazgo respaldado por los datos." },
+    PREGUNTA: { title: "Te tocó una pregunta", text: "Aquí aparecerá una pregunta para explorar la participación." }
+  };
+
+  function loadPirinola() {
+    if (pirinolaLoading) return pirinolaLoading;
+    pirinolaLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "assets/pirinola/pirinola-3d.js";
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("No se cargó la pirinola 3D"));
+      document.head.append(script);
+    }).then(() => {
+      if (!window.Pirinola3D) throw new Error("El visor de la pirinola no está disponible");
+      return window.Pirinola3D;
+    });
+    return pirinolaLoading;
+  }
+
+  async function preparePirinola() {
+    if (pirinolaViewer) return pirinolaViewer;
+    try {
+      const api = await loadPirinola();
+      if (pirinolaViewer) return pirinolaViewer;
+      if ((!sceneVisible && !(dialog.open && dialog.dataset.object === "pirinola")) || !$("pirinola-canvas").isConnected) return null;
+      pirinolaViewer = api.createViewer($("pirinola-canvas"), {
+        autoRotate: false,
+        tiltDeg: 13,
+        resting: !(dialog.open && dialog.dataset.object === "pirinola"),
+        onSettle(face) {
+          const message = pirinolaMessages[face.word];
+          $("pirinola-result-type").textContent = face.word;
+          $("pirinola-result-title").textContent = message.title;
+          $("pirinola-result-text").textContent = message.text;
+          $("pirinola-result").hidden = false;
+          $("pirinola-spin").disabled = false;
+        }
+      });
+      return pirinolaViewer;
+    } catch {
+      $("pirinola-error").hidden = false;
+      $("pirinola-spin").disabled = true;
+      return null;
+    }
+  }
+
+  function syncPirinola() {
+    if (!sceneVisible && !(dialog.open && dialog.dataset.object === "pirinola")) {
+      if (pirinolaViewer) pirinolaViewer.setPaused(true);
+      return;
+    }
+    if (pirinolaViewer) pirinolaViewer.setPaused(false);
+    else preparePirinola();
+  }
 
   function updateDesk() {
     frame = 0;
@@ -63,6 +122,13 @@
     shadeMotion = null;
     dimmer.style.opacity = "0";
     surface.style.opacity = "1";
+    if (dialog.dataset.object === "pirinola") {
+      $("pirinola-opener").prepend($("pirinola-canvas"));
+      $("pirinola-canvas").tabIndex = -1;
+      $("pirinola-canvas").setAttribute("aria-hidden", "true");
+      $("pirinola-canvas").removeAttribute("aria-label");
+      if (pirinolaViewer) pirinolaViewer.setResting(true);
+    }
     dialog.close();
     document.documentElement.style.overflow = scrollOverflow;
     document.body.classList.remove("object-returning");
@@ -72,6 +138,7 @@
     closing = false;
     dialog.dataset.animating = "false";
     scheduleDesk();
+    syncPirinola();
     const callback = afterClose;
     afterClose = null;
     if (callback) callback();
@@ -91,7 +158,7 @@
       motion.reverse();
     } else {
       if (motion) motion.cancel();
-      motion = surface.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: originTransform(), opacity: .5 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
+      motion = surface.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: dialog.dataset.object === "pirinola" ? "translate(0,16px) scale(.96)" : originTransform(), opacity: .5 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
       motion.onfinish = finishClose;
     }
   }
@@ -123,12 +190,23 @@
     source = origin;
     closing = false;
     surface.classList.toggle("is-card", kind === "card");
+    surface.classList.toggle("is-pirinola", kind === "pirinola");
     $("map-focus").hidden = kind !== "map";
     $("card-focus").hidden = kind !== "card";
+    $("pirinola-focus").hidden = kind !== "pirinola";
+    if (kind === "pirinola") {
+      $("pirinola-canvas-mount").append($("pirinola-canvas"));
+      $("pirinola-canvas").tabIndex = 0;
+      $("pirinola-canvas").removeAttribute("aria-hidden");
+      $("pirinola-canvas").setAttribute("aria-label", "Pirinola 3D. Usa flecha izquierda o derecha para rotarla.");
+      $("pirinola-result").hidden = true;
+      $("pirinola-spin").disabled = false;
+      if (pirinolaViewer) pirinolaViewer.setResting(false);
+    }
     dialog.dataset.object = kind;
     dialog.dataset.animating = String(!reduced.matches);
     if (kind === "map") $("map-controls").open = !mobile.matches;
-    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : "card-title");
+    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : "pirinola-title");
     if (kind === "card") showCard(key);
     scrollOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
@@ -139,10 +217,11 @@
     dimmer.style.opacity = ".58";
     if (!reduced.matches) {
       shadeMotion = dimmer.animate([{ opacity: 0 }, { opacity: .58 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
-      motion = surface.animate([{ transform: start, opacity: .55 }, { transform: "translate(0,0) scale(1)", opacity: 1 }], { duration: 340, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
+      motion = surface.animate([{ transform: kind === "pirinola" ? "translate(0,16px) scale(.96)" : start, opacity: .55 }, { transform: "translate(0,0) scale(1)", opacity: 1 }], { duration: 340, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
       motion.onfinish = () => { if (!closing && motion) { motion.cancel(); motion = null; dialog.dataset.animating = "false"; } };
     }
     if (kind === "map") document.dispatchEvent(new CustomEvent("civic:map-open"));
+    if (kind === "pirinola") preparePirinola();
   }
 
   function flipCard() {
@@ -157,6 +236,18 @@
     $("card-reading").textContent = flipped && fact ? `${fact.title}. ${fact.text} ${fact.value}. ${fact.caution}` : "";
   }
 
+  $("pirinola-opener").addEventListener("click", () => openObject("pirinola", $("pirinola-opener")), { signal });
+  $("pirinola-spin").addEventListener("click", () => {
+    if (!pirinolaViewer) return;
+    $("pirinola-result").hidden = true;
+    $("pirinola-spin").disabled = true;
+    pirinolaViewer.spin(undefined, reduced.matches);
+  }, { signal });
+  $("pirinola-canvas").addEventListener("keydown", event => {
+    if (!pirinolaViewer || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    pirinolaViewer.rotateBy(event.key === "ArrowLeft" ? -60 : 60);
+  }, { signal });
   $("map-opener").addEventListener("click", () => openObject("map", $("map-opener")), { signal });
   document.querySelectorAll("[data-card]").forEach(button => button.addEventListener("click", () => openObject("card", button, button.dataset.card), { signal }));
   $("close-object").addEventListener("click", () => closeObject(), { signal });
@@ -192,7 +283,7 @@
     }
     scheduleDesk();
   }, { signal });
-  const observer = new IntersectionObserver(entries => { sceneVisible = entries[0].isIntersecting; if (sceneVisible) scheduleDesk(); }, { threshold: 0 });
+  const observer = new IntersectionObserver(entries => { sceneVisible = entries[0].isIntersecting; if (sceneVisible) scheduleDesk(); syncPirinola(); }, { threshold: 0 });
   observer.observe($("mesa"));
   window.addEventListener("pagehide", event => {
     if (event.persisted) return;
@@ -201,7 +292,9 @@
     if (frame) cancelAnimationFrame(frame);
     if (motion) motion.cancel();
     if (shadeMotion) shadeMotion.cancel();
+    if (pirinolaViewer) pirinolaViewer.destroy();
     dimmer.remove();
   }, { once: true });
   updateDesk();
+  syncPirinola();
 })();
