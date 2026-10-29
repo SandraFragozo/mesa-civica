@@ -63,7 +63,8 @@ def main():
         "@@MAP@@": interactive_svg(),
         "@@DATA@@": json_script(data),
         "@@MUNICIPAL@@": json_script(municipal),
-        "@@FONT@@": base64.b64encode((BASE / "assets" / "fonts" / "Manrope.ttf").read_bytes()).decode("ascii"),
+        "@@FONT@@": base64.b64encode((BASE / "assets" / "fonts" / "PlusJakartaSans.ttf").read_bytes()).decode("ascii"),
+        "@@MONO_FONT@@": base64.b64encode((BASE / "assets" / "fonts" / "JetBrainsMono.ttf").read_bytes()).decode("ascii"),
         "@@MAP_SOURCE@@": mapping["source_sha256"],
     }
     for token, value in substitutions.items():

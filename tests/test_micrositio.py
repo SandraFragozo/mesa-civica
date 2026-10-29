@@ -51,6 +51,7 @@ class OfflineDashboardTests(unittest.TestCase):
         page.locator("#select-state").select_option(str(state))
         if mode != "participation":
             page.locator(f'[data-mode="{mode}"]').click()
+        page.locator("#tab-summary").click()
         if mode == "gender":
             year, sex = 2024, "all"
         if mode == "age":
@@ -134,6 +135,7 @@ class OfflineDashboardTests(unittest.TestCase):
 
     def test_03_curves_render_and_points_match_csv(self):
         self.configure(state=9, sex=1, section=0)
+        self.page.locator("#tab-age").click()
         self.page.locator('[data-chart="age"]').scroll_into_view_if_needed()
         self.page.locator("#age-chart svg").wait_for()
         points = self.page.locator("#age-chart [data-point]").evaluate_all("elements => elements.map(e => JSON.parse(e.dataset.point))")
@@ -151,6 +153,7 @@ class OfflineDashboardTests(unittest.TestCase):
         self.assertIn("LN", self.page.locator("#tooltip").inner_text())
         self.page.keyboard.press("Escape")
         self.assertTrue(self.page.locator("#tooltip").is_hidden())
+        self.page.locator("#tab-history").click()
         self.page.locator('[data-chart="history"]').scroll_into_view_if_needed()
         self.page.locator("#history-chart svg").wait_for()
         self.assertEqual(self.page.locator("#history-chart [data-point]").count(), 12)
@@ -165,6 +168,7 @@ class OfflineDashboardTests(unittest.TestCase):
         selected = raw.loc[raw["AELEC"].eq(2024) & raw["EDOCVE"].eq(1) & raw["MPIONOM"].eq("Jesús María")]
         self.assertEqual(self.page.locator("#municipal-body tr td").nth(1).inner_text(), f"{int(selected['LN'].sum()):,}")
         self.configure(state=9)
+        self.page.locator("#tab-inclusion").click()
         special = pd.read_csv(BASE / "output/resumen_modalidades_especiales_2024.csv")
         for row in self.page.locator("#special-counts div").all():
             modality = row.locator("dt").inner_text()
@@ -184,6 +188,77 @@ class OfflineDashboardTests(unittest.TestCase):
         self.assertTrue(self.page.url.startswith("file:"))
         self.assertEqual(self.network, [])
         self.assertEqual(self.errors, [])
+
+    def test_06_story_themes_and_rankings_match_csv(self):
+        self.page.set_viewport_size({"width": 1440, "height": 1100})
+        colors = set()
+        def ratio(frame):
+            return float(frame["SV"].sum() / frame["LN"].sum() * 100) if frame["LN"].sum() else None
+        for mode in ("participation", "age", "election", "gender"):
+            self.configure(mode=mode)
+            self.assertEqual(self.page.locator("body").get_attribute("data-theme"), mode)
+            colors.add(self.page.locator("#mx-09").evaluate("element => getComputedStyle(element).fill"))
+            expected = []
+            for state, frame in self.state.groupby("EDOCVE"):
+                if mode != "election":
+                    frame = frame.loc[frame["AELEC"].eq(2024)]
+                if mode == "participation":
+                    value = ratio(frame)
+                elif mode == "age":
+                    value = ratio(frame.loc[frame["GRUPO_EDAD"].eq(AGES[0])]) - ratio(frame.loc[frame["GRUPO_EDAD"].isin(AGES[1:3])])
+                elif mode == "election":
+                    value = ratio(frame.loc[frame["AELEC"].isin([2012, 2018, 2024])]) - ratio(frame.loc[frame["AELEC"].isin([2009, 2015, 2021])])
+                else:
+                    value = ratio(frame.loc[frame["SEXO"].eq("Mujeres")]) - ratio(frame.loc[frame["SEXO"].eq("Hombres")])
+                expected.append((int(state), value))
+            top = [state for state, value in sorted(expected, key=lambda item: (-item[1], item[0]))[:3]]
+            bottom = [state for state, value in sorted(expected, key=lambda item: (item[1], item[0]))[:3]]
+            actual = lambda selector: self.page.locator(selector + " [data-rank-state]").evaluate_all("elements => elements.map(element => Number(element.dataset.rankState))")
+            self.assertEqual(actual("#ranking-top"), top)
+            self.assertEqual(actual("#ranking-bottom"), bottom)
+            self.page.locator("#ranking-top [data-rank-state]").first.click()
+            self.assertEqual(self.page.locator("#select-state").input_value(), str(top[0]))
+        self.assertEqual(len(colors), 4)
+        self.configure(sex=2)
+        self.assertEqual(self.page.locator("[data-rank-state]").count(), 0)
+
+    def test_07_myth_answers_use_real_counts_and_reset(self):
+        frame, _ = self.configure(state=19)
+        cases = {
+            "zone": (frame.loc[frame["TIPOSEC"].eq("Rural")], frame.loc[frame["TIPOSEC"].eq("Urbana")]),
+            "gender": (frame.loc[frame["SEXO"].eq("Mujeres")], frame.loc[frame["SEXO"].eq("Hombres")]),
+            "age": (frame.loc[frame["GRUPO_EDAD"].eq(AGES[0])], frame.loc[frame["GRUPO_EDAD"].eq(AGES[2])]),
+        }
+        for topic, groups in cases.items():
+            self.page.locator(f'[data-quiz="{topic}"]').click()
+            self.page.locator('[data-guess="0"]').click()
+            self.assertEqual(self.page.locator("#quiz-result").get_attribute("data-revealed"), "true")
+            labels = self.page.locator("#quiz-result .quiz-fact strong").all_inner_texts()
+            self.assertEqual(labels, [f"{float(group['SV'].sum() / group['LN'].sum() * 100):,.2f}%" for group in groups])
+            for group in groups:
+                self.assertIn(f"{int(group['LN'].sum()):,}", self.page.locator("#quiz-result").inner_text())
+        self.configure(state=1)
+        self.assertEqual(self.page.locator("#quiz-result").get_attribute("data-revealed"), "false")
+
+    def test_08_tabs_stacked_bar_tooltip_and_paired_bars(self):
+        frame, counts = self.configure(state=9, sex=0, age=2)
+        widths = self.page.locator("#participation-stack > span").evaluate_all("elements => elements.map(element => parseFloat(element.style.width))")
+        self.assertAlmostEqual(sum(widths), 100, delta=1e-4)
+        for value, field in zip(widths, ("sv", "nv", "ns")):
+            self.assertAlmostEqual(value, counts[field] / counts["ln"] * 100, delta=1e-4)
+        self.page.locator("#mx-09").focus()
+        self.assertEqual(self.page.locator("#tooltip .tip-row").count(), 2)
+        self.assertIn("Total Nacional", self.page.locator("#tooltip").inner_text())
+        self.page.locator("#tab-summary").focus()
+        self.page.keyboard.press("ArrowRight")
+        self.assertEqual(self.page.locator("#tab-age").get_attribute("aria-selected"), "true")
+        self.assertTrue(self.page.locator("#panel-age").is_visible())
+        self.page.locator("#tab-territory").click()
+        records = self.page.locator(".section-bars[data-section='0'] [data-bar-counts]").evaluate_all("elements => elements.map(element => JSON.parse(element.dataset.barCounts))")
+        for actual, sex in zip(records, ("Mujeres", "Hombres")):
+            selected = self.state.loc[self.state["EDOCVE"].eq(9) & self.state["AELEC"].eq(2024) & self.state["GRUPO_EDAD"].eq(AGES[2]) & self.state["TIPOSEC"].eq("Urbana") & self.state["SEXO"].eq(sex)]
+            self.assertEqual(actual["ln"], int(selected["LN"].sum()))
+            self.assertEqual(actual["sv"], int(selected["SV"].sum()))
 
 
 if __name__ == "__main__":
