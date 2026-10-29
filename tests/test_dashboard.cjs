@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const { DataEngine, rate, smallBase } = require("../web/data-engine.js");
-const page = fs.readFileSync(path.join(__dirname, "../output/mapa_interactivo/index.html"), "utf8");
+const page = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
 const data = JSON.parse(page.match(/<script id="ccpc-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
 const engine = new DataEngine(data);
 const filters = { state: 0, year: 2024, sex: "all", section: "all", age: "all", mode: "participation" };

@@ -30,8 +30,9 @@ class OfflineDashboardTests(unittest.TestCase):
         cls.errors, cls.network = [], []
         cls.page.on("pageerror", lambda error: cls.errors.append(str(error)))
         cls.page.on("request", lambda request: cls.network.append(request.url) if request.url.startswith(("http:", "https:")) else None)
-        cls.page.goto((BASE / "output/mapa_interactivo/index.html").as_uri(), wait_until="load")
+        cls.page.goto((BASE / "index.html").as_uri(), wait_until="load")
         cls.page.wait_for_function("document.querySelector('#stat-ln').textContent === '98,330,348'")
+        cls.page.locator("#map-opener").click()
         cls.state = pd.read_csv(BASE / "output/cubo_estatal_demografico.csv")
         cls.national = pd.read_csv(BASE / "output/cubo_nacional_demografico.csv")
 
@@ -43,6 +44,7 @@ class OfflineDashboardTests(unittest.TestCase):
 
     def configure(self, mode="participation", state=0, year=2024, sex="all", section="all", age="all"):
         page = self.page
+        page.locator("#map-controls").evaluate("element => element.open = true")
         page.locator('[data-mode="participation"]').click()
         page.locator("#filter-year").select_option(str(year))
         page.locator("#filter-sex").select_option(str(sex))

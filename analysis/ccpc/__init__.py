@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 
-BASE = Path(__file__).resolve().parents[1]
+BASE = Path(__file__).resolve().parents[2]
 YEARS = (2009, 2012, 2015, 2018, 2021, 2024)
 PREFIX = "DatosAbiertos_DECEyEC_ConteosCensales"
 SPECIAL = {"_VotoAnticipado2024": "Voto Anticipado", "_PrisionPreventiva2024": "Prisión Preventiva"}

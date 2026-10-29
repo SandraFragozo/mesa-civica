@@ -9,7 +9,7 @@ from ccpc import AGES, BASE, COUNTS, PREFIX, SPECIAL, aggregate, normalize, read
 
 
 def load_script(name):
-    spec = importlib.util.spec_from_file_location(name, BASE / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(name, BASE / "analysis" / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

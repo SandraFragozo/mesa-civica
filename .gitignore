@@ -7,3 +7,7 @@ Thumbs.db
 .env.*
 output/**/*.tmp
 .local/
+node_modules/
+.vercel/
+public/
+index.html.tmp

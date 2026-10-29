@@ -399,6 +399,7 @@
   }
 
   function showTip(element, event) {
+    if ($("object-dialog").dataset.animating === "true") return;
     const detail = tipData(element);
     if (!detail) return;
     activeTip = element;
@@ -463,6 +464,18 @@
   }
 
   Object.entries(data.states).forEach(([code, label]) => $("select-state").add(new Option(label, code)));
+  document.addEventListener("civic:map-open", () => {
+    dirtyCharts.add("age");
+    dirtyCharts.add("history");
+    if (["age", "history"].includes(selectedPanel)) renderChart(selectedPanel);
+  }, { signal });
+  document.addEventListener("civic:request-story", event => {
+    if (!Object.hasOwn(modes, event.detail?.mode)) return;
+    Object.assign(filters, { year: 2024, sex: "all", section: "all", age: "all", state: 0, mode: event.detail.mode });
+    render();
+    if (["summary", "age", "history", "territory", "inclusion"].includes(event.detail.panel)) activatePanel(event.detail.panel);
+    $("map-focus").scrollTop = 0;
+  }, { signal });
   for (const field of ["year", "sex", "section", "age"]) {
     $("filter-" + field).addEventListener("change", event => {
       filters[field] = field === "year" ? Number(event.target.value) : event.target.value;
@@ -553,4 +566,16 @@
     municipalRows = null;
   }, { once: true });
   render();
+  const cardCriteria = { state: 0, year: 2024, sex: "all", section: "all", age: "all" };
+  const cardAge = engine.ageDrop(cardCriteria);
+  const cardElection = engine.electionGap(cardCriteria);
+  const cardGender = engine.genderGap(cardCriteria);
+  const cardSpecial = engine.special(0);
+  const cardNonbinary = engine.sum({ ...cardCriteria, sex: 2 });
+  document.dispatchEvent(new CustomEvent("civic:card-facts", { detail: {
+    first: { title: "Después de los 18", text: "En 2024, la participación de 20–29 años quedó por debajo de la de 18–19. ¿Y cuándo se recupera?", value: `18–19: ${percent(cardAge.firstRate)}\n20–29: ${percent(cardAge.youngRate)}`, caution: `Recupera el nivel en ${cardAge.recovery ? cardAge.recovery + " años" : "ningún grupo posterior"}. La edad no acredita un primer voto individual.` },
+    election: { title: "También cuenta la intermedia", text: "Las tres elecciones presidenciales registraron mayor participación conjunta que las tres intermedias.", value: `${points(cardElection.value)} de diferencia\n2009–2024`, caution: "Se suman SV y LN antes de calcular las tasas. Son registros persona-elección, no personas únicas." },
+    women: { title: "Ellas participan más", text: "En 2024, las mujeres registraron mayor participación que los hombres. Explora cómo cambia entre zonas.", value: `Mujeres: ${percent(rate(cardGender.women))}\nHombres: ${percent(rate(cardGender.men))}`, caution: `${points(cardGender.value)} de brecha nacional. Se suman los conteos antes de calcular cada tasa.` },
+    inclusion: { title: "Otras formas de estar", text: "La participación también se estudia fuera de las casillas ordinarias. Cada universo se conserva por separado.", value: `Anticipado: ${number(cardSpecial[0].count)}\nP. preventiva: ${number(cardSpecial[1].count)}`, caution: `No binario: LN ${number(cardNonbinary.ln)}, SV ${number(cardNonbinary.sv)} en 2024, universo ordinario. Las modalidades cuentan registros, sin tasas.` }
+  } }));
 })();

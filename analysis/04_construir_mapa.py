@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import xml.etree.ElementTree as ET
 
 import pandas as pd
 
@@ -51,6 +52,24 @@ def json_script(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
 
+def school_preview():
+    svg = ET.fromstring(interactive_svg())
+    svg.attrib = {"viewBox": svg.get("viewBox"), "aria-hidden": "true", "focusable": "false"}
+    palette = ["#f4c750", "#ec7983", "#74bda0", "#a68bc5", "#ee9b58", "#78bddd"]
+    _, _, entities, _ = verified_mapping()
+    for index, group in enumerate(svg):
+        group.attrib = {"fill": palette[(index * 7 + index // 6) % len(palette)], "stroke": "#fdf6dc", "stroke-width": "8"}
+        for path in group:
+            path.attrib.pop("data-source-path", None)
+    for entity in entities:
+        if entity["edocve"] in [1, 6, 9, 17, 29]:
+            continue
+        x, y = entity["official_reference_svg"]
+        label = ET.SubElement(svg, "{http://www.w3.org/2000/svg}text", {"x": str(x), "y": str(y), "text-anchor": "middle", "font-size": "62", "font-family": "Jakarta, sans-serif", "fill": "#233f51", "stroke": "none"})
+        label.text = entity["name"].split()[0][:7]
+    return ET.tostring(svg, encoding="unicode")
+
+
 def main():
     args = arguments("Construye un mapa autocontenido y offline a partir de los cuatro cubos CCPC")
     _, paths, entities, mapping = verified_mapping()
@@ -58,6 +77,9 @@ def main():
     template = (BASE / "web" / "index.template.html").read_text(encoding="utf-8")
     substitutions = {
         "@@CSS@@": (BASE / "web" / "styles.css").read_text(encoding="utf-8"),
+        "@@SCENE_CSS@@": (BASE / "web" / "scene.css").read_text(encoding="utf-8"),
+        "@@SCENE_APP@@": (BASE / "web" / "scene.js").read_text(encoding="utf-8"),
+        "@@PREVIEW_MAP@@": school_preview(),
         "@@ENGINE@@": (BASE / "web" / "data-engine.js").read_text(encoding="utf-8"),
         "@@APP@@": (BASE / "web" / "app.js").read_text(encoding="utf-8"),
         "@@MAP@@": interactive_svg(),
@@ -69,12 +91,15 @@ def main():
     }
     for token, value in substitutions.items():
         template = template.replace(token, value)
-    destination = args.output / "mapa_interactivo" / "index.html"
+    destination = BASE / "index.html"
     destination.parent.mkdir(parents=True, exist_ok=True)
+    images = [BASE / "assets/imgs/backgrounds/bg-mesa-dibujo.png", *[BASE / "assets/imgs/loteria" / filename for filename in ["el-primer-voto.jpg", "la-intermedia.jpg", "la-votante.jpg", "la-inclusion.jpg", "reverso.jpg"]]]
+    if any(not source.is_file() for source in images):
+        raise ValueError("Faltan imágenes necesarias en assets/imgs")
     temporary = destination.with_suffix(".html.tmp")
     temporary.write_text(template, encoding="utf-8")
     temporary.replace(destination)
-    print(f"Mapa: {destination}\nVinculación: {len(entities)} entidades, {len(paths)} piezas SVG\nDatos: {len(data['rows']):,} grupos demográficos; {len(municipal):,} grupos municipales\nTamaño autocontenido: {destination.stat().st_size / 1024 / 1024:.2f} MB")
+    print(f"Mapa: {destination}\nVinculación: {len(entities)} entidades, {len(paths)} piezas SVG\nDatos: {len(data['rows']):,} grupos demográficos; {len(municipal):,} grupos municipales\nHTML: {destination.stat().st_size / 1024 / 1024:.2f} MB; imágenes locales: {len(images)}")
 
 
 if __name__ == "__main__":
