@@ -41,19 +41,19 @@
   }
 
   const PALETTE = {
-    ivoryBright: "#FCF7EB",
-    ivoryBase: "#F6ECD6",
-    ivoryWarm: "#EAD8B6",
-    edgeWear: "#D5B98C",
-    edgeChip: "#C4A270",
-    charcoalCore: "#15110F",
-    charcoalMid: "#251E1B",
-    charcoalRim: "#3D322C",
+    ivoryBright: "#FCF8EE",
+    ivoryBase: "#F6EDD8",
+    ivoryWarm: "#EADAB8",
+    edgeWear: "#DEC69A",
+    edgeChip: "#CCA974",
+    charcoalCore: "#14100E",
+    charcoalMid: "#241D1A",
+    charcoalRim: "#3C312B",
     ink: "#140C08"
   };
 
   // Coordenadas normalizadas en [-1, +1]^2 de los puntos (pips) para las 6 caras (1 a 6)
-  const PIP_OFFSET = 0.425;
+  const PIP_OFFSET = 0.465;
   const PIP_LAYOUTS = {
     1: [[0, 0]],
     2: [[-PIP_OFFSET, -PIP_OFFSET], [PIP_OFFSET, PIP_OFFSET]],
@@ -119,8 +119,12 @@
     ctx.rect(x0, y0, w, h);
     ctx.clip();
 
-    // 1. Fondo base marfil cálido / hueso tostado en la zona de biseles exteriores
-    ctx.fillStyle = PALETTE.ivoryWarm;
+    // 1. Fondo continuo blanco hueso / marfil cálido en toda la celda (incluyendo bisel redondeado)
+    const baseGrad = ctx.createLinearGradient(x0, y0, x0 + w, y0 + h);
+    baseGrad.addColorStop(0.0, PALETTE.ivoryBright);
+    baseGrad.addColorStop(0.55, PALETTE.ivoryBase);
+    baseGrad.addColorStop(1.0, PALETTE.ivoryWarm);
+    ctx.fillStyle = baseGrad;
     ctx.fillRect(x0, y0, w, h);
 
     const innerX = x0 + ATLAS_LAYOUT.pad;
@@ -137,80 +141,84 @@
     const fw = innerW - flatMargin * 2;
     const fh = innerH - flatMargin * 2;
 
-    // 2. Desgaste artesanal pintado a mano en los bordes y esquinas redondeadas
-    ctx.fillStyle = PALETTE.edgeWear;
-    ctx.fillRect(innerX - 12, innerY - 12, innerW + 24, innerH + 24);
-
-    // Interior luminoso blanco hueso / marfil cálido
+    // 2. Luz suave de hueso pulido en el plano central de la cara
     const faceGrad = ctx.createLinearGradient(fx, fy, fx + fw, fy + fh);
-    faceGrad.addColorStop(0.0, PALETTE.ivoryBright);
-    faceGrad.addColorStop(0.55, PALETTE.ivoryBase);
-    faceGrad.addColorStop(1.0, "#EFE0C2");
-    drawRoundedRectPath(ctx, fx - 10, fy - 10, fw + 20, fh + 20, 56);
+    faceGrad.addColorStop(0.0, "#FFFDF7");
+    faceGrad.addColorStop(0.60, PALETTE.ivoryBright);
+    faceGrad.addColorStop(1.0, PALETTE.ivoryBase);
+    drawRoundedRectPath(ctx, fx - 18, fy - 18, fw + 36, fh + 36, 72);
     ctx.fillStyle = faceGrad;
     ctx.fill();
 
-    // Pinceladas pictóricas de gouache cálido y textura de hueso tallado
-    for (let i = 0; i < 28; i++) {
+    // Pinceladas pictóricas sutiles de gouache cálido y textura de hueso tallado
+    for (let i = 0; i < 26; i++) {
       const bx = innerX + rng() * innerW;
       const by = innerY + rng() * innerH;
-      const rx = 18 + rng() * 56;
-      const ry = 10 + rng() * 34;
+      const rx = 20 + rng() * 58;
+      const ry = 12 + rng() * 34;
       const rot = (rng() - 0.5) * Math.PI;
-      ctx.fillStyle = i % 2 === 0 ? "#FFFBF2" : "#E5D1AC";
-      ctx.globalAlpha = 0.14 + rng() * 0.10;
+      ctx.fillStyle = i % 2 === 0 ? "#FFFDF8" : "#EAD8B6";
+      ctx.globalAlpha = 0.13 + rng() * 0.08;
       ctx.beginPath();
       ctx.ellipse(bx, by, rx, ry, rot, 0, TAU);
       ctx.fill();
     }
 
-    // Finas vetas orgánicas de marfil / hueso
-    for (let i = 0; i < 10; i++) {
+    // Finas vetas orgánicas de marfil / hueso muy suaves
+    for (let i = 0; i < 8; i++) {
       const sy = fy + rng() * fh;
-      ctx.strokeStyle = i % 2 === 0 ? "#DFC8A0" : "#FFFDF7";
-      ctx.globalAlpha = 0.22;
-      ctx.lineWidth = 1.6 + rng() * 2.2;
+      ctx.strokeStyle = i % 2 === 0 ? "#E3CEAA" : "#FFFDF9";
+      ctx.globalAlpha = 0.18;
+      ctx.lineWidth = 1.4 + rng() * 2.0;
       ctx.beginPath();
-      ctx.moveTo(fx + 10, sy);
-      ctx.quadraticCurveTo(cx, sy + (rng() - 0.5) * 28, fx + fw - 10, sy + (rng() - 0.5) * 14);
+      ctx.moveTo(innerX + 16, sy);
+      ctx.quadraticCurveTo(cx, sy + (rng() - 0.5) * 24, innerX + innerW - 16, sy + (rng() - 0.5) * 12);
       ctx.stroke();
     }
     ctx.globalAlpha = 1.0;
 
-    // 3. Muescas y desgaste artesanal en las orillas del bisel (patina cálida)
-    for (let i = 0; i < 36; i++) {
-      const side = i % 4;
-      const t = 0.12 + rng() * 0.76;
-      let wx, wy, wrx, wry;
-      if (side === 0) { wx = fx + t * fw; wy = fy + (rng() - 0.5) * 10; wrx = 8 + rng() * 16; wry = 3 + rng() * 5; }
-      else if (side === 1) { wx = fx + t * fw; wy = fy + fh + (rng() - 0.5) * 10; wrx = 8 + rng() * 16; wry = 3 + rng() * 5; }
-      else if (side === 2) { wx = fx + (rng() - 0.5) * 10; wy = fy + t * fh; wrx = 3 + rng() * 5; wry = 8 + rng() * 16; }
-      else { wx = fx + fw + (rng() - 0.5) * 10; wy = fy + t * fh; wrx = 3 + rng() * 5; wry = 8 + rng() * 16; }
+    // 3. Ligero desgaste artesanal pintado a mano en los bordes y esquinas exteriores (|u| -> 1)
+    ctx.strokeStyle = PALETTE.edgeWear;
+    ctx.lineWidth = 22;
+    ctx.globalAlpha = 0.45;
+    drawRoundedRectPath(ctx, innerX + 6, innerY + 6, innerW - 12, innerH - 12, 36);
+    ctx.stroke();
 
-      ctx.fillStyle = i % 3 === 0 ? "#FFFDF7" : PALETTE.edgeChip;
-      ctx.globalAlpha = 0.42;
+    for (let i = 0; i < 42; i++) {
+      const side = i % 4;
+      const t = 0.06 + rng() * 0.88;
+      let wx, wy, wrx, wry;
+      if (side === 0) { wx = innerX + t * innerW; wy = innerY + (rng() - 0.3) * 14; wrx = 10 + rng() * 20; wry = 4 + rng() * 7; }
+      else if (side === 1) { wx = innerX + t * innerW; wy = innerY + innerH - (rng() - 0.3) * 14; wrx = 10 + rng() * 20; wry = 4 + rng() * 7; }
+      else if (side === 2) { wx = innerX + (rng() - 0.3) * 14; wy = innerY + t * innerH; wrx = 4 + rng() * 7; wry = 10 + rng() * 20; }
+      else { wx = innerX + innerW - (rng() - 0.3) * 14; wy = innerY + t * innerH; wrx = 4 + rng() * 7; wry = 10 + rng() * 20; }
+
+      ctx.fillStyle = i % 3 === 0 ? "#FFFDF8" : PALETTE.edgeChip;
+      ctx.globalAlpha = 0.34;
       ctx.beginPath();
       ctx.ellipse(wx, wy, wrx, wry, 0, 0, TAU);
       ctx.fill();
     }
     ctx.globalAlpha = 1.0;
 
-    // 4. Filete luminoso de bisel + Contorno de tinta negra de arista interior (estilo Ref 1 "Las Leyendas")
-    drawRoundedRectPath(ctx, fx + 4, fy + 4, fw - 8, fh - 8, 44);
-    ctx.strokeStyle = "#FFFDF8";
-    ctx.lineWidth = 6.5;
+    // 4. Filete luminoso sutil en la transición del bisel + línea de tinta toon en las 12 aristas exteriores
+    drawRoundedRectPath(ctx, fx, fy, fw, fh, 54);
+    ctx.strokeStyle = "#FFFDF9";
+    ctx.globalAlpha = 0.65;
+    ctx.lineWidth = 4.5;
     ctx.stroke();
+    ctx.globalAlpha = 1.0;
 
-    // Línea de tinta negra marcada bordeando la cara redondeada (da el look 2D/3D inked toon en las 12 aristas)
-    drawRoundedRectPath(ctx, fx - 5, fy - 5, fw + 10, fh + 10, 50);
+    // Trazo de tinta negra toon justo en la costura exterior de las 12 aristas del dado (innerX..innerW)
+    drawRoundedRectPath(ctx, innerX, innerY, innerW, innerH, 24);
     ctx.strokeStyle = PALETTE.ink;
-    ctx.lineWidth = 6.2;
+    ctx.lineWidth = 8.5;
     ctx.stroke();
 
     // 5. Puntos circulares (del 1 al 6) ligeramente hundidos y pintados a mano en negro carbón profundo
     const pips = PIP_LAYOUTS[faceNumber] || PIP_LAYOUTS[1];
-    // El punto del 1 es tradicionalmente un poquito más grande y expresivo
-    const pipRadiusNorm = faceNumber === 1 ? 0.172 : 0.146;
+    // El punto central del 1 es tradicionalmente un poquito más grande y expresivo
+    const pipRadiusNorm = faceNumber === 1 ? 0.190 : 0.158;
     const pipRadiusPx = pipRadiusNorm * (innerW * 0.5);
 
     for (let p = 0; p < pips.length; p++) {
@@ -220,19 +228,19 @@
 
       // a) Sombreado de la cuenca cóncava hundida en el marfil (sombra cálida arriba-izq, luz abajo-der)
       ctx.beginPath();
-      ctx.arc(px - 3.0, py - 3.0, pipRadiusPx * 1.14, 0, TAU);
-      ctx.fillStyle = "#CBB084";
+      ctx.arc(px - 2.6, py - 2.6, pipRadiusPx * 1.11, 0, TAU);
+      ctx.fillStyle = "#D4BA8E";
       ctx.fill();
 
       ctx.beginPath();
-      ctx.arc(px + 3.2, py + 3.2, pipRadiusPx * 1.12, 0, TAU);
-      ctx.fillStyle = "#FFFDF6";
+      ctx.arc(px + 2.8, py + 2.8, pipRadiusPx * 1.10, 0, TAU);
+      ctx.fillStyle = "#FFFDF7";
       ctx.fill();
 
       // b) Base del punto pintado a mano en negro carbón profundo
       const pipGrad = ctx.createLinearGradient(px - pipRadiusPx, py - pipRadiusPx, px + pipRadiusPx, py + pipRadiusPx);
-      pipGrad.addColorStop(0.0, "#0D0A09");
-      pipGrad.addColorStop(0.55, PALETTE.charcoalCore);
+      pipGrad.addColorStop(0.0, "#0C0908");
+      pipGrad.addColorStop(0.58, PALETTE.charcoalCore);
       pipGrad.addColorStop(1.0, PALETTE.charcoalMid);
 
       ctx.beginPath();
@@ -241,15 +249,15 @@
       ctx.fill();
 
       // c) Anillo de tinta negra profunda en el borde de la cuenca
-      ctx.lineWidth = 4.2;
-      ctx.strokeStyle = "#090605";
+      ctx.lineWidth = 4.0;
+      ctx.strokeStyle = "#080504";
       ctx.stroke();
 
       // d) Media luna de reflejo cálido interno (como en las imágenes de referencia 2 y 3)
       ctx.beginPath();
-      ctx.arc(px, py, pipRadiusPx * 0.76, 0.18 * Math.PI, 0.78 * Math.PI);
-      ctx.strokeStyle = "#52443C";
-      ctx.lineWidth = pipRadiusPx * 0.18;
+      ctx.arc(px, py, pipRadiusPx * 0.75, 0.18 * Math.PI, 0.78 * Math.PI);
+      ctx.strokeStyle = "#55473E";
+      ctx.lineWidth = pipRadiusPx * 0.16;
       ctx.lineCap = "round";
       ctx.stroke();
 
@@ -258,13 +266,13 @@
       ctx.ellipse(
         px - pipRadiusPx * 0.34,
         py - pipRadiusPx * 0.34,
-        pipRadiusPx * 0.22,
-        pipRadiusPx * 0.12,
+        pipRadiusPx * 0.20,
+        pipRadiusPx * 0.11,
         -0.65,
         0,
         TAU
       );
-      ctx.fillStyle = "#6B5A50";
+      ctx.fillStyle = "#6E5D52";
       ctx.fill();
     }
 
@@ -316,9 +324,9 @@
     const dLen = Math.hypot(dx, dy, dz) || 1;
     const rnx = dx / dLen, rny = dy / dLen, rnz = dz / dLen;
 
-    // Radio del núcleo plano B y radio de esquina redondeada Rb (B + Rb = 0.90)
-    const B = 0.675;
-    const Rb = 0.225;
+    // Radio del núcleo plano B y radio de esquina redondeada Rb (B + Rb = 0.765)
+    const B = 0.57;
+    const Rb = 0.195;
     const scaleCore = B / FLAT_ALPHA;
 
     let px = cx * scaleCore + rnx * Rb;
@@ -329,7 +337,7 @@
 
     // Hundimiento cóncavo 3D real de los puntos circulares (del 1 al 6)
     const pips = PIP_LAYOUTS[faceDef.faceNum];
-    const pipRad = faceDef.faceNum === 1 ? 0.172 : 0.146;
+    const pipRad = faceDef.faceNum === 1 ? 0.190 : 0.158;
     const pipDepth = 0.048;
 
     for (let i = 0; i < pips.length; i++) {
@@ -530,16 +538,16 @@
     if (poseName === "table") {
       // Composición clásica sobre mesa (como Imagen de Referencia 1)
       return {
-        dieA: { pos: [-0.96, -0.22,  0.22], rot: [-18 * DEG,  34 * DEG,   4 * DEG], value: fA },
-        dieB: { pos: [ 0.98,  0.18, -0.22], rot: [ 22 * DEG, -28 * DEG, -14 * DEG], value: fB }
+        dieA: { pos: [-0.92, -0.20,  0.22], rot: [-18 * DEG,  34 * DEG,   4 * DEG], value: fA },
+        dieB: { pos: [ 0.94,  0.18, -0.22], rot: [ 22 * DEG, -28 * DEG, -14 * DEG], value: fB }
       };
     }
     // Composición dinámica en el aire (como Imágenes de Referencia 2 y 3)
     const baseA = FACE_ROTATIONS[fA] || FACE_ROTATIONS[5];
     const baseB = FACE_ROTATIONS[fB] || FACE_ROTATIONS[6];
     return {
-      dieA: { pos: [-0.95, -0.56,  0.16], rot: [baseA[0], baseA[1] + 0.18, baseA[2]], value: fA },
-      dieB: { pos: [ 0.95,  0.56, -0.14], rot: [baseB[0] + 0.15, baseB[1] - 0.22, baseB[2] - 0.18], value: fB }
+      dieA: { pos: [-0.90, -0.52,  0.18], rot: [baseA[0], baseA[1] + 0.18, baseA[2]], value: fA },
+      dieB: { pos: [ 0.90,  0.54, -0.18], rot: [baseB[0] + 0.15, baseB[1] - 0.22, baseB[2] - 0.18], value: fB }
     };
   }
 
@@ -1092,6 +1100,7 @@
     const initialPose = getPairPose(opts.pose, opts.faceA, opts.faceB);
     const state = {
       rotY: 0,
+      cameraScale: opts.cameraScale || 1,
       pitchX: 6 * DEG,
       velY: 0,
       autoRotate: !!opts.autoRotate,
@@ -1114,6 +1123,7 @@
       lastMoveTime: 0,
       rafId: 0,
       lastFrameTime: performance.now(),
+      paused: false,
       destroyed: false
     };
 
@@ -1162,7 +1172,7 @@
     }
 
     function render(now) {
-      if (state.destroyed) return;
+      if (state.destroyed || state.paused) return;
       const dt = Math.min(0.05, Math.max(0.001, (now - state.lastFrameTime) / 1000));
       state.lastFrameTime = now;
 
@@ -1206,7 +1216,7 @@
 
       const aspect = canvas.width / Math.max(1, canvas.height);
       const fov = aspect < 0.85 ? 44 * DEG : 35 * DEG;
-      const eye = [0, 0.25, 6.20];
+      const eye = [0, 0.20, 6.65 * state.cameraScale];
       const proj = mat4Perspective(fov, aspect, 0.5, 25.0);
       const view = mat4LookAt(eye, [0, 0.0, 0], [0, 1, 0]);
       const vp = mat4Multiply(proj, view);
@@ -1288,13 +1298,23 @@
 
     state.rafId = requestAnimationFrame(render);
 
-    function rollDice(forcedA, forcedB) {
+    function rollDice(forcedA, forcedB, instant = false) {
       const fA = forcedA || (1 + Math.floor(Math.random() * 6));
       const fB = forcedB || (1 + Math.floor(Math.random() * 6));
       state.faceA = fA;
       state.faceB = fB;
 
       const target = getPairPose(state.poseName, fA, fB);
+      if (instant) {
+        state.dieA = { pos: target.dieA.pos.slice(), rot: target.dieA.rot.slice() };
+        state.dieB = { pos: target.dieB.pos.slice(), rot: target.dieB.rot.slice() };
+        state.rolling = false;
+        const result = { faceA: fA, faceB: fB, sum: fA + fB };
+        if (typeof opts.onRollResult === "function") opts.onRollResult(result);
+        return result;
+      }
+      state.dieA.rot = state.dieA.rot.map(angle => Math.atan2(Math.sin(angle), Math.cos(angle)));
+      state.dieB.rot = state.dieB.rot.map(angle => Math.atan2(Math.sin(angle), Math.cos(angle)));
       state.startA = { pos: state.dieA.pos.slice(), rot: state.dieA.rot.slice() };
       state.startB = { pos: state.dieB.pos.slice(), rot: state.dieB.rot.slice() };
 
@@ -1313,9 +1333,19 @@
       return { faceA: fA, faceB: fB, sum: fA + fB };
     }
 
-    function setPose(poseName) {
+    function setPose(poseName, instant = false) {
       state.poseName = poseName;
-      rollDice(state.faceA, state.faceB);
+      if (instant) {
+        const pose = getPairPose(poseName, state.faceA, state.faceB);
+        state.dieA = { pos: pose.dieA.pos.slice(), rot: pose.dieA.rot.slice() };
+        state.dieB = { pos: pose.dieB.pos.slice(), rot: pose.dieB.rot.slice() };
+        state.rolling = false;
+      } else rollDice(state.faceA, state.faceB);
+    }
+
+    function rotateBy(degrees) {
+      state.rotY += degrees * DEG;
+      state.velY = 0;
     }
 
     async function exportGLB(includeOutline) {
@@ -1339,18 +1369,45 @@
       state.outlineWidth = clamp(Number(w) || 0, 0, 0.08);
     }
 
+    function setCameraScale(scale) {
+      state.cameraScale = clamp(scale, 1, 2);
+    }
+
     function resetCamera() {
       state.pitchX = 6 * DEG;
       state.rotY = 0;
       state.velY = 0;
     }
 
+    function setPaused(paused) {
+      if (state.destroyed || state.paused === !!paused) return;
+      state.paused = !!paused;
+      if (state.paused) cancelAnimationFrame(state.rafId);
+      else {
+        state.lastFrameTime = performance.now();
+        state.rafId = requestAnimationFrame(render);
+      }
+    }
+
     function destroy() {
+      if (state.destroyed) return;
       state.destroyed = true;
       cancelAnimationFrame(state.rafId);
       canvas.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      for (const gpu of [dieAGPU, dieBGPU]) {
+        gl.deleteBuffer(gpu.posBuf);
+        gl.deleteBuffer(gpu.normBuf);
+        gl.deleteBuffer(gpu.smoothNormBuf);
+        gl.deleteBuffer(gpu.uvBuf);
+        gl.deleteBuffer(gpu.idxBuf);
+      }
+      gl.deleteTexture(tex);
+      gl.deleteProgram(surfProg);
+      gl.deleteProgram(outProg);
+      atlasCanvas.width = 0;
+      atlasCanvas.height = 0;
     }
 
     return {
@@ -1358,8 +1415,11 @@
       setPose,
       exportGLB,
       setAutoRotate,
+      rotateBy,
+      setPaused,
       setOutlineWidth,
       resetCamera,
+      setCameraScale,
       atlasCanvas,
       destroy
     };

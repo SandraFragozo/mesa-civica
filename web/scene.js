@@ -34,6 +34,8 @@
   let pirinolaLoading = null;
   let baleroViewer = null;
   let baleroLoading = null;
+  let dadosViewer = null;
+  let dadosLoading = null;
   let baleroTimer = 0;
   let notebookTimer = 0;
   const gameContent = CivicGames.createContent(JSON.parse($("ccpc-data").textContent));
@@ -117,6 +119,62 @@
     }
     if (pirinolaViewer) pirinolaViewer.setPaused(false);
     else preparePirinola();
+  }
+
+  function loadDados() {
+    if (dadosLoading) return dadosLoading;
+    dadosLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "assets/dados/dados-3d.js";
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("No se cargaron los dados 3D"));
+      document.head.append(script);
+    }).then(() => {
+      if (!window.Dados3D) throw new Error("El visor de dados no está disponible");
+      return window.Dados3D;
+    });
+    return dadosLoading;
+  }
+
+  async function prepareDados() {
+    if (dadosViewer) return dadosViewer;
+    try {
+      const api = await loadDados();
+      if (dadosViewer) return dadosViewer;
+      if ((!sceneVisible && !(dialog.open && dialog.dataset.object === "dados")) || signal.aborted || !$("dados-canvas").isConnected) return null;
+      dadosViewer = api.createViewer($("dados-canvas"), {
+        autoRotate: false,
+        pose: dialog.open && dialog.dataset.object === "dados" ? "dynamic" : "table",
+        cameraScale: dialog.open && dialog.dataset.object === "dados" ? 1.2 : 1,
+        faceA: 5,
+        faceB: 6,
+        onRollResult(result) {
+          if (!dialog.open || dialog.dataset.object !== "dados" || closing) return;
+          $("dados-result").textContent = `Salieron ${result.faceA} y ${result.faceB}. Total: ${result.sum}.`;
+          $("dados-result").hidden = false;
+          $("dados-roll").textContent = "Volver a lanzar";
+          $("dados-roll").disabled = false;
+        }
+      });
+      $("dados-loading").hidden = true;
+      $("dados-canvas-mount").setAttribute("aria-busy", "false");
+      $("dados-roll").disabled = false;
+      syncDados();
+      return dadosViewer;
+    } catch {
+      $("dados-loading").hidden = true;
+      $("dados-canvas-mount").setAttribute("aria-busy", "false");
+      $("dados-roll").disabled = true;
+      $("dados-error").hidden = false;
+      return null;
+    }
+  }
+
+  function syncDados() {
+    const visible = !document.hidden && (dialog.open ? dialog.dataset.object === "dados" : sceneVisible);
+    if (dadosViewer) dadosViewer.setPaused(!visible);
+    else if (visible) prepareDados();
   }
 
   function loadBalero() {
@@ -239,6 +297,17 @@
     shadeMotion = null;
     dimmer.style.opacity = "0";
     surface.style.opacity = "1";
+    if (dialog.dataset.object === "dados") {
+      $("dados-opener").append($("dados-canvas"));
+      $("dados-canvas").tabIndex = -1;
+      $("dados-canvas").setAttribute("aria-hidden", "true");
+      $("dados-canvas").removeAttribute("aria-label");
+      if (dadosViewer) {
+        dadosViewer.setPose("table", true);
+        dadosViewer.setCameraScale(1);
+        dadosViewer.resetCamera();
+      }
+    }
     if (dialog.dataset.object === "balero") {
       clearTimeout(baleroTimer);
       $("balero-opener").prepend($("balero-canvas"));
@@ -269,6 +338,7 @@
     scheduleDesk();
     syncPirinola();
     syncBalero();
+    syncDados();
     const callback = afterClose;
     afterClose = null;
     if (callback) callback();
@@ -288,7 +358,7 @@
       motion.reverse();
     } else {
       if (motion) motion.cancel();
-      motion = surface.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: dialog.dataset.object === "notebook" ? notebookOriginTransform() : ["pirinola", "balero"].includes(dialog.dataset.object) ? "translate(0,16px) scale(.96)" : originTransform(), opacity: .5 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
+      motion = surface.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: dialog.dataset.object === "notebook" ? notebookOriginTransform() : ["pirinola", "balero", "dados"].includes(dialog.dataset.object) ? "translate(0,16px) scale(.96)" : originTransform(), opacity: .5 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
       motion.onfinish = finishClose;
     }
   }
@@ -322,12 +392,28 @@
     surface.classList.toggle("is-card", kind === "card");
     surface.classList.toggle("is-pirinola", kind === "pirinola");
     surface.classList.toggle("is-balero", kind === "balero");
+    surface.classList.toggle("is-dados", kind === "dados");
     surface.classList.toggle("is-notebook", kind === "notebook");
     $("map-focus").hidden = kind !== "map";
     $("card-focus").hidden = kind !== "card";
     $("pirinola-focus").hidden = kind !== "pirinola";
     $("balero-focus").hidden = kind !== "balero";
+    $("dados-focus").hidden = kind !== "dados";
     $("notebook-focus").hidden = kind !== "notebook";
+    if (kind === "dados") {
+      $("dados-canvas-mount").append($("dados-canvas"));
+      $("dados-canvas").tabIndex = 0;
+      $("dados-canvas").removeAttribute("aria-hidden");
+      $("dados-canvas").setAttribute("aria-label", "Dados 3D. Arrastra o usa las flechas para cambiar el ángulo.");
+      $("dados-result").hidden = true;
+      $("dados-roll").textContent = "Lanzar dados";
+      $("dados-roll").disabled = !dadosViewer;
+      if (dadosViewer) {
+        dadosViewer.setPose("dynamic", true);
+        dadosViewer.setCameraScale(1.2);
+        dadosViewer.resetCamera();
+      }
+    }
     if (kind === "balero") {
       $("balero-canvas-mount").append($("balero-canvas"));
       $("balero-canvas").tabIndex = 0;
@@ -348,7 +434,7 @@
     dialog.dataset.object = kind;
     dialog.dataset.animating = String(!reduced.matches);
     if (kind === "map") $("map-controls").open = !mobile.matches;
-    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : "notebook-title");
+    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : "notebook-title");
     if (kind === "card") showCard(key);
     scrollOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
@@ -359,9 +445,10 @@
     dimmer.style.opacity = ".58";
     if (!reduced.matches) {
       shadeMotion = dimmer.animate([{ opacity: 0 }, { opacity: .58 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
-      motion = surface.animate([{ transform: ["pirinola", "balero"].includes(kind) ? "translate(0,16px) scale(.96)" : start, opacity: .55 }, { transform: "translate(0,0) scale(1)", opacity: 1 }], { duration: 340, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
+      motion = surface.animate([{ transform: ["pirinola", "balero", "dados"].includes(kind) ? "translate(0,16px) scale(.96)" : start, opacity: .55 }, { transform: "translate(0,0) scale(1)", opacity: 1 }], { duration: kind === "dados" ? 280 : 340, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
       motion.onfinish = () => { if (!closing && motion) { motion.cancel(); motion = null; dialog.dataset.animating = "false"; } };
     }
+    syncDados();
     if (kind === "map") document.dispatchEvent(new CustomEvent("civic:map-open"));
     if (kind === "pirinola") preparePirinola();
     if (kind === "balero") { syncBalero(); prepareBalero(); }
@@ -381,6 +468,20 @@
 
   $("notebook-opener").addEventListener("click", openNotebook, { signal });
   $("notebook-to-map").addEventListener("click", () => closeObject(() => openObject("map", $("map-opener"))), { signal });
+  $("dados-opener").addEventListener("click", () => openObject("dados", $("dados-opener")), { signal });
+  $("dados-roll").addEventListener("click", () => {
+    if (!dadosViewer || $("dados-roll").disabled || closing) return;
+    $("dados-roll").disabled = true;
+    $("dados-roll").textContent = "Lanzando…";
+    $("dados-result").hidden = true;
+    dadosViewer.resetCamera();
+    dadosViewer.rollDice(undefined, undefined, reduced.matches);
+  }, { signal });
+  $("dados-canvas").addEventListener("keydown", event => {
+    if (!dadosViewer || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    event.preventDefault();
+    dadosViewer.rotateBy(event.key === "ArrowLeft" ? -15 : 15);
+  }, { signal });
   $("balero-opener").addEventListener("click", () => openObject("balero", $("balero-opener")), { signal });
   $("balero-question").addEventListener("click", event => {
     const button = event.target.closest("[data-balero-answer]");
@@ -457,8 +558,9 @@
     }
     scheduleDesk();
   }, { signal });
-  const observer = new IntersectionObserver(entries => { sceneVisible = entries[0].isIntersecting; if (sceneVisible) scheduleDesk(); syncPirinola(); syncBalero(); }, { threshold: 0 });
+  const observer = new IntersectionObserver(entries => { sceneVisible = entries[0].isIntersecting; if (sceneVisible) scheduleDesk(); syncPirinola(); syncBalero(); syncDados(); }, { threshold: 0 });
   observer.observe($("mesa"));
+  document.addEventListener("visibilitychange", syncDados, { signal });
   window.addEventListener("pagehide", event => {
     if (event.persisted) return;
     lifecycle.abort();
@@ -470,9 +572,11 @@
     clearTimeout(baleroTimer);
     clearTimeout(notebookTimer);
     if (baleroViewer) baleroViewer.destroy();
+    if (dadosViewer) dadosViewer.destroy();
     dimmer.remove();
   }, { once: true });
   updateDesk();
   syncPirinola();
   syncBalero();
+  syncDados();
 })();

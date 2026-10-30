@@ -11,7 +11,7 @@ const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"
 
 test("web project builds static HTML without executing Python", () => {
   const output = execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: root, encoding: "utf8" });
-  assert.match(output, /10 archivos/);
+  assert.match(output, /11 archivos/);
   assert.equal(config.framework, null);
   assert.equal(config.outputDirectory, "public");
   assert.equal(config.buildCommand, "npm run build");
@@ -34,9 +34,9 @@ test("deployment builds from HTML and images with no analysis scripts or CSVs pr
   const isolated = fs.mkdtempSync(path.join(parent, "web-only-"));
   assert.equal(path.dirname(isolated), parent);
   try {
-    for (const name of ["index.html", "package.json", "vercel.json", "scripts", "assets/imgs", "assets/pirinola/pirinola-3d.js", "assets/balero/balero-3d.js"]) fs.cpSync(path.join(root, name), path.join(isolated, name), { recursive: true });
+    for (const name of ["index.html", "package.json", "vercel.json", "scripts", "assets/imgs", "assets/pirinola/pirinola-3d.js", "assets/balero/balero-3d.js", "assets/dados/dados-3d.js"]) fs.cpSync(path.join(root, name), path.join(isolated, name), { recursive: true });
     const output = execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: isolated, encoding: "utf8" });
-    assert.match(output,/10 archivos/);
+    assert.match(output,/11 archivos/);
     assert.equal(fs.existsSync(path.join(isolated,"analysis")),false);
     assert.equal(fs.existsSync(path.join(isolated,"output")),false);
     const published = fs.readFileSync(path.join(isolated,"public/index.html"),"utf8");

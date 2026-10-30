@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dados Tradicionales Mexicanos 3D — Estudio Cel-Shaded ("Las Leyendas")</title>
+  <style>
+    :root {
+      --ink: #140C08;
+      --paper: #F7EFE0;
+      --ivory: #FCF8EE;
+      --amber: #D88428;
+      --crimson: #C62828;
+      --cobalt: #1E4FA8;
+      --emerald: #1B8044;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: transparent;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Fondos de inspección para resaltar que el canvas WebGL es 100% transparente */
+    body.bg-checker {
+      background-color: #EFE6D5;
+      background-image:
+        linear-gradient(45deg, rgba(20, 12, 8, 0.055) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(20, 12, 8, 0.055) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(20, 12, 8, 0.055) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(20, 12, 8, 0.055) 75%);
+      background-size: 28px 28px;
+      background-position: 0 0, 0 14px, 14px -14px, -14px 0;
+    }
+
+    body.bg-warm {
+      background: radial-gradient(circle at 50% 42%, #FFF9EB 0%, #F1DEC0 56%, #DEC196 100%);
+    }
+
+    body.bg-transparent {
+      background: transparent;
+    }
+
+    .stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #dados-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #dados-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Cabecera estilo cartel tradicional mexicano con borde entintado */
+    .hud-header {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      max-width: 440px;
+      background: rgba(252, 248, 238, 0.94);
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 5px 5px 0 var(--ink);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+
+    .hud-badge {
+      display: inline-block;
+      background: var(--ink);
+      color: var(--ivory);
+      font-weight: 900;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 2px solid var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .hud-title {
+      font-size: 19px;
+      font-weight: 900;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+
+    .hud-sub {
+      font-size: 12.5px;
+      line-height: 1.4;
+      color: #4A382B;
+    }
+
+    .pip-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .pip-pill {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 7px;
+      border: 2px solid var(--ink);
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    .pip-pill.ivory    { background: var(--ivory); color: var(--ink); }
+    .pip-pill.charcoal { background: #1B1512; color: #FFFDF8; }
+    .pip-pill.amber    { background: #EADAB8; color: var(--ink); }
+
+    /* Marcador de resultado del tiro */
+    .hud-score {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      background: rgba(252, 248, 238, 0.94);
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 5px 5px 0 var(--ink);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 225px;
+    }
+
+    .score-title {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #5A4332;
+    }
+
+    .score-value {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--ink);
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 2px solid var(--ink);
+      background: #FFF9ED;
+      text-align: center;
+    }
+
+    /* Barra de herramientas inferior */
+    .hud-controls {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(252, 248, 238, 0.95);
+      border: 3px solid var(--ink);
+      border-radius: 14px;
+      padding: 10px 14px;
+      box-shadow: 5px 5px 0 var(--ink);
+      z-index: 10;
+      max-width: calc(100vw - 24px);
+    }
+
+    .btn {
+      appearance: none;
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 800;
+      color: var(--ink);
+      background: #FFFBF4;
+      border: 2.5px solid var(--ink);
+      border-radius: 9px;
+      padding: 7px 11px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 var(--ink);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.12s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: #FFF0CF;
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+
+    .btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+
+    .btn-primary {
+      background: var(--crimson);
+      color: #FFFDF9;
+    }
+
+    .btn-primary:hover {
+      background: #A91D1D;
+    }
+
+    .btn-secondary {
+      background: var(--cobalt);
+      color: #FFFDF9;
+    }
+
+    .btn-secondary:hover {
+      background: #163C82;
+    }
+
+    .btn-export {
+      background: var(--emerald);
+      color: #FFFDF9;
+    }
+
+    .btn-export:hover {
+      background: #146334;
+    }
+
+    .control-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(234, 218, 184, 0.55);
+      border: 2px solid var(--ink);
+    }
+
+    .control-group input[type="range"] {
+      width: 72px;
+      accent-color: var(--ink);
+      cursor: pointer;
+    }
+
+    /* Modo embed limpio (?embed=1) para integrarse sin HUD en iframes o widgets */
+    body.embed-mode .hud-header,
+    body.embed-mode .hud-score,
+    body.embed-mode .hud-controls {
+      display: none !important;
+    }
+
+    @media (max-width: 780px) {
+      .hud-header {
+        max-width: calc(100vw - 28px);
+        padding: 10px 12px;
+      }
+      .hud-score {
+        top: auto;
+        bottom: 92px;
+        right: 14px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-checker">
+  <div class="stage">
+    <canvas id="dados-canvas" aria-label="Modelo 3D interactivo de un par de dados mexicanos clásicos"></canvas>
+  </div>
+
+  <aside class="hud-header">
+    <span class="hud-badge">Estilo "Las Leyendas" • Toon 3D</span>
+    <h1 class="hud-title">Par de Dados Mexicanos Clásicos</h1>
+    <p class="hud-sub">
+      Esquinas redondeadas, color blanco hueso / marfil cálido con desgaste artesanal en bordes,
+      puntos circulares del 1 al 6 ligeramente hundidos en negro carbón y contorno grueso de tinta negra.
+    </p>
+    <div class="pip-pills">
+      <span class="pip-pill ivory">MARFIL CÁLIDO</span>
+      <span class="pip-pill charcoal">PUNTOS 1–6 HUNDIDOS</span>
+      <span class="pip-pill amber">INKED TOON SHADER</span>
+    </div>
+  </aside>
+
+  <aside class="hud-score">
+    <span class="score-title">Resultado del Tiro</span>
+    <div id="roll-status" class="score-value">Dado A: 5 • Dado B: 6 (Total: 11)</div>
+  </aside>
+
+  <nav class="hud-controls" aria-label="Controles del modelo 3D">
+    <button id="btn-roll" class="btn btn-primary" type="button">🎲 ¡Tirar dados! (Azar)</button>
+    <button id="btn-pose" class="btn btn-secondary" type="button">Pose: En el aire</button>
+    <button id="btn-autorotate" class="btn" type="button">Girar en eje Y: ON</button>
+    <button id="btn-reset" class="btn" type="button">Centrar vista</button>
+
+    <label class="control-group" for="rng-outline">
+      <span>Contorno Toon</span>
+      <input id="rng-outline" type="range" min="0" max="0.07" step="0.002" value="0.042" />
+    </label>
+
+    <button id="btn-bg" class="btn" type="button">Fondo: Damero Alpha</button>
+    <a class="btn btn-export" href="./dados.glb" download="dados.glb">⬇ Descargar .GLB</a>
+    <button id="btn-png" class="btn" type="button">📸 Capturar PNG transparente</button>
+  </nav>
+
+  <script src="./dados-3d.js"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("embed") === "1") {
+        document.body.classList.remove("bg-checker", "bg-warm");
+        document.body.classList.add("bg-transparent", "embed-mode");
+      }
+
+      const canvas = document.getElementById("dados-canvas");
+      const rollStatus = document.getElementById("roll-status");
+
+      const viewer = window.Dados3D.createViewer(canvas, {
+        autoRotate: true,
+        autoRotateSpeed: 0.62,
+        outlineWidth: 0.042,
+        pose: "dynamic",
+        faceA: 5,
+        faceB: 6,
+        onRollResult: function (res) {
+          rollStatus.textContent = "Dado A: " + res.faceA + " • Dado B: " + res.faceB + " (Total: " + res.sum + ")";
+        }
+      });
+
+      const btnRoll = document.getElementById("btn-roll");
+      const btnPose = document.getElementById("btn-pose");
+      const btnAutoRotate = document.getElementById("btn-autorotate");
+      const btnReset = document.getElementById("btn-reset");
+      const rngOutline = document.getElementById("rng-outline");
+      const btnBg = document.getElementById("btn-bg");
+      const btnPng = document.getElementById("btn-png");
+
+      let autoRot = true;
+      let currentPose = "dynamic";
+      const bgModes = [
+        { cls: "bg-checker", label: "Fondo: Damero Alpha" },
+        { cls: "bg-warm", label: "Fondo: Cálido Estudio" },
+        { cls: "bg-transparent", label: "Fondo: Alpha Puro" }
+      ];
+      let bgIdx = 0;
+
+      btnRoll.addEventListener("click", function () {
+        rollStatus.textContent = "Tirando dados en el aire...";
+        viewer.rollDice();
+      });
+
+      btnPose.addEventListener("click", function () {
+        currentPose = currentPose === "dynamic" ? "table" : "dynamic";
+        viewer.setPose(currentPose);
+        btnPose.textContent = currentPose === "dynamic" ? "Pose: En el aire" : "Pose: Sobre mesa";
+      });
+
+      btnAutoRotate.addEventListener("click", function () {
+        autoRot = !autoRot;
+        viewer.setAutoRotate(autoRot);
+        btnAutoRotate.textContent = autoRot ? "Girar en eje Y: ON" : "Girar en eje Y: OFF";
+      });
+
+      btnReset.addEventListener("click", function () {
+        viewer.resetCamera();
+      });
+
+      rngOutline.addEventListener("input", function (e) {
+        viewer.setOutlineWidth(parseFloat(e.target.value));
+      });
+
+      btnBg.addEventListener("click", function () {
+        document.body.classList.remove(bgModes[bgIdx].cls);
+        bgIdx = (bgIdx + 1) % bgModes.length;
+        document.body.classList.add(bgModes[bgIdx].cls);
+        btnBg.textContent = bgModes[bgIdx].label;
+      });
+
+      btnPng.addEventListener("click", function () {
+        requestAnimationFrame(function () {
+          const dataUrl = canvas.toDataURL("image/png");
+          const a = document.createElement("a");
+          a.href = dataUrl;
+          a.download = "dados-3d-transparente.png";
+          a.click();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
