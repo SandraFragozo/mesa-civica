@@ -36,11 +36,41 @@
   let baleroLoading = null;
   let baleroTimer = 0;
   let notebookTimer = 0;
-  const pirinolaMessages = {
-    MITO: { title: "Te tocó un mito", text: "Aquí aparecerá una afirmación para contrastarla con los datos." },
-    REALIDAD: { title: "Te tocó una realidad", text: "Aquí aparecerá un hallazgo respaldado por los datos." },
-    PREGUNTA: { title: "Te tocó una pregunta", text: "Aquí aparecerá una pregunta para explorar la participación." }
-  };
+  const gameContent = CivicGames.createContent(JSON.parse($("ccpc-data").textContent));
+  const baleroDeck = CivicGames.createDeck(gameContent.balero);
+  const pirinolaDecks = Object.fromEntries(Object.entries(gameContent.pirinola).map(([type, items]) => [type, CivicGames.createDeck(items)]));
+  let baleroQuestion = null;
+  let baleroAnswered = false;
+  let pirinolaQuestion = null;
+
+  function renderAnswers(container, question, attribute) {
+    const deck = CivicGames.createDeck(question.options);
+    container.replaceChildren(...question.options.map(() => {
+      const option = deck.next();
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset[attribute] = option.id;
+      button.textContent = option.text;
+      button.setAttribute("aria-pressed", "false");
+      return button;
+    }));
+  }
+
+  function showPirinolaContent(type) {
+    const item = pirinolaDecks[type].next();
+    pirinolaQuestion = type === "PREGUNTA" ? item : null;
+    $("pirinola-result").dataset.item = item.id;
+    $("pirinola-result-type").textContent = type;
+    $("pirinola-result-title").textContent = item.prompt || item.title;
+    $("pirinola-result-text").textContent = pirinolaQuestion ? "Elige una respuesta para contrastarla con los datos." : `${type === "MITO" ? "Lo que muestran los datos: " : ""}${item.explanation}`;
+    $("pirinola-scope").textContent = `${item.scope}. ${item.source}`;
+    $("pirinola-question").hidden = !pirinolaQuestion;
+    $("pirinola-question").disabled = false;
+    $("pirinola-feedback").hidden = true;
+    if (pirinolaQuestion) renderAnswers($("pirinola-answers"), item, "pirinolaAnswer");
+    $("pirinola-result").hidden = false;
+    $("pirinola-spin").disabled = false;
+  }
 
   function loadPirinola() {
     if (pirinolaLoading) return pirinolaLoading;
@@ -69,12 +99,7 @@
         tiltDeg: 13,
         resting: !(dialog.open && dialog.dataset.object === "pirinola"),
         onSettle(face) {
-          const message = pirinolaMessages[face.word];
-          $("pirinola-result-type").textContent = face.word;
-          $("pirinola-result-title").textContent = message.title;
-          $("pirinola-result-text").textContent = message.text;
-          $("pirinola-result").hidden = false;
-          $("pirinola-spin").disabled = false;
+          if (dialog.open && dialog.dataset.object === "pirinola") showPirinolaContent(face.word);
         }
       });
       return pirinolaViewer;
@@ -121,8 +146,9 @@
         pose: "open",
         resting: !(dialog.open && dialog.dataset.object === "balero"),
         onTrickComplete(success) {
-          if (!dialog.open || dialog.dataset.object !== "balero") return;
-          $("balero-result").textContent = success ? "¡Correcto! 2 + 2 = 4. El balero entró." : "Casi. 2 + 2 = 4. El balero pasó de largo.";
+          if (!dialog.open || dialog.dataset.object !== "balero" || !baleroAnswered) return;
+          const correct = baleroQuestion.options.find(option => option.id === baleroQuestion.correct).text;
+          $("balero-result").textContent = `${success ? "¡Correcto! El balero entró." : `El balero pasó de largo. Respuesta: ${correct}.`} ${baleroQuestion.explanation}`;
           $("balero-result").dataset.success = String(success);
           $("balero-result").hidden = false;
           $("balero-retry").hidden = false;
@@ -150,6 +176,12 @@
   function resetBaleroQuestion() {
     clearTimeout(baleroTimer);
     baleroTimer = 0;
+    baleroQuestion = baleroDeck.next();
+    baleroAnswered = false;
+    $("balero-question").dataset.item = baleroQuestion.id;
+    $("balero-question").querySelector("legend").textContent = baleroQuestion.prompt;
+    renderAnswers($("balero-answers"), baleroQuestion, "baleroAnswer");
+    $("balero-scope").textContent = `${baleroQuestion.scope}. ${baleroQuestion.source}`;
     $("balero-question").disabled = !baleroViewer;
     $("balero-result").hidden = true;
     $("balero-retry").hidden = true;
@@ -350,9 +382,13 @@
   $("notebook-opener").addEventListener("click", openNotebook, { signal });
   $("notebook-to-map").addEventListener("click", () => closeObject(() => openObject("map", $("map-opener"))), { signal });
   $("balero-opener").addEventListener("click", () => openObject("balero", $("balero-opener")), { signal });
-  document.querySelectorAll("[data-balero-answer]").forEach(button => button.addEventListener("click", () => {
+  $("balero-question").addEventListener("click", event => {
+    const button = event.target.closest("[data-balero-answer]");
+    if (!button) return;
     if (!baleroViewer || $("balero-question").disabled) return;
-    const success = Number(button.dataset.baleroAnswer) === 4;
+    const success = button.dataset.baleroAnswer === baleroQuestion.correct;
+    baleroAnswered = true;
+    button.setAttribute("aria-pressed", "true");
     $("balero-question").disabled = true;
     baleroViewer.setPose("showcase", reduced.matches);
     baleroTimer = setTimeout(() => {
@@ -361,9 +397,20 @@
       else baleroViewer.playMiss(reduced.matches);
       baleroTimer = 0;
     }, reduced.matches ? 0 : 530);
-  }, { signal }));
+  }, { signal });
   $("balero-retry").addEventListener("click", resetBaleroQuestion, { signal });
   $("pirinola-opener").addEventListener("click", () => openObject("pirinola", $("pirinola-opener")), { signal });
+  $("pirinola-question").addEventListener("click", event => {
+    const button = event.target.closest("[data-pirinola-answer]");
+    if (!button || !pirinolaQuestion || $("pirinola-question").disabled) return;
+    const success = button.dataset.pirinolaAnswer === pirinolaQuestion.correct;
+    $("pirinola-question").disabled = true;
+    button.setAttribute("aria-pressed", "true");
+    const correct = pirinolaQuestion.options.find(option => option.id === pirinolaQuestion.correct).text;
+    $("pirinola-feedback").textContent = `${success ? "¡Correcto!" : `Respuesta: ${correct}.`} ${pirinolaQuestion.explanation}`;
+    $("pirinola-feedback").dataset.success = String(success);
+    $("pirinola-feedback").hidden = false;
+  }, { signal });
   $("pirinola-spin").addEventListener("click", () => {
     if (!pirinolaViewer) return;
     $("pirinola-result").hidden = true;

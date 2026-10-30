@@ -43,7 +43,7 @@ class CivicTableTests(unittest.TestCase):
     def test_01_scroll_zoom_keeps_objects_on_the_table(self):
         page = self.page
         page.emulate_media(reduced_motion="no-preference")
-        self.assertEqual(page.locator("#mesa button").count(),5)
+        self.assertEqual(page.locator("#mesa button").count(),8)
         clutter = page.locator("#mesa").evaluate("""root => {const walker = document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const text=[];while(walker.nextNode()){const node=walker.currentNode;if(node.textContent.trim() && !node.parentElement.closest('.scene-header,svg')) text.push(node.textContent.trim());}return text;}""")
         self.assertEqual(clutter,[])
         for width,height in ((1440,1000),(1858,887),(390,844),(320,568)):

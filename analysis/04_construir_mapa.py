@@ -81,6 +81,7 @@ def main():
         "@@SCENE_APP@@": (BASE / "web" / "scene.js").read_text(encoding="utf-8"),
         "@@PREVIEW_MAP@@": school_preview(),
         "@@ENGINE@@": (BASE / "web" / "data-engine.js").read_text(encoding="utf-8"),
+        "@@GAME_CONTENT@@": (BASE / "web" / "game-content.js").read_text(encoding="utf-8"),
         "@@APP@@": (BASE / "web" / "app.js").read_text(encoding="utf-8"),
         "@@MAP@@": interactive_svg(),
         "@@DATA@@": json_script(data),
