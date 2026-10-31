@@ -28,6 +28,8 @@
 .loteria-board-panel h3,.loteria-caller h3{display:flex;justify-content:space-between;margin:0 0 9px;font-size:15px;letter-spacing:-.02em}
 .loteria-board-panel h3 span{font:700 12px JetBrains,monospace}
 .loteria-board{display:grid;grid-template-columns:repeat(var(--board-size),minmax(0,1fr));gap:3px;width:100%;padding:4px;background:#a32c39;border:2px solid #a32c39;border-radius:3px}
+.loteria-board-panel[data-side="machine"] .loteria-board{background:#6e2530;border-color:#6e2530}
+.loteria-board-panel[data-side="player"] .loteria-board{background:#205a43;border-color:#205a43}
 .loteria-cell{position:relative;display:block;width:100%;aspect-ratio:896/1200;min-width:0;padding:0;border:0;background:#e9d4ad;overflow:hidden;transition:transform 120ms cubic-bezier(.22,1,.36,1)}
 .loteria-cell>img:first-child{display:block;width:100%;height:100%;object-fit:cover}
 .loteria-cell:hover:not(:disabled){transform:translateY(-2px);z-index:1}
@@ -46,7 +48,11 @@
 .loteria-call-back small{font-size:12px;text-wrap:pretty}
 .loteria-call:active:not(:disabled){transform:scale(.98)}
 .loteria-call:disabled{cursor:default}
-#loteria-status{min-height:38px;margin:12px 0 0;font-size:12px;line-height:1.5;text-wrap:pretty}
+#loteria-status{min-height:38px;margin:15px 0 0;font-size:15px;line-height:1.6;text-wrap:pretty}
+#loteria-status[data-winner]{display:grid;gap:4px;min-height:0;padding:16px 10px;background:#e3f1df;border:2px solid #205a43;border-radius:6px;color:#174832;box-shadow:0 4px 0 #205a4326}
+#loteria-status[data-winner="machine"]{background:#f7e3dc;border-color:#6e2530;color:#6e2530;box-shadow:0 4px 0 #6e253026}
+#loteria-status[data-winner] strong{display:block;font:800 clamp(23px,2.8vw,35px) Jakarta,sans-serif;line-height:1.05;letter-spacing:-.04em;text-wrap:balance}
+#loteria-status[data-winner] span{font-size:14px}
 #loteria-remaining{margin:5px 0 0;font:600 11px JetBrains,monospace;color:#6c5f50}
 @media(max-width:900px){.loteria-object{left:calc(50% - 35vw / var(--zoom-limit));top:var(--row-toys);width:calc(var(--toy-size) * .7)}.loteria-setup{grid-template-columns:1fr 1fr}.loteria-setup button{grid-column:1/-1}}
 @media(max-width:650px){.loteria-object{left:calc(50% - 38vw / var(--zoom-limit))}.loteria-focus{padding:15px}.loteria-head{align-items:start}.loteria-play{grid-template-columns:1fr}.loteria-caller{grid-row:1}.loteria-call{width:min(36vw,160px)}.loteria-caller h3{justify-content:center}.loteria-setup{grid-template-columns:1fr}}

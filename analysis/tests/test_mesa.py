@@ -43,7 +43,7 @@ class CivicTableTests(unittest.TestCase):
     def test_01_scroll_zoom_keeps_objects_on_the_table(self):
         page = self.page
         page.emulate_media(reduced_motion="no-preference")
-        self.assertEqual(page.locator("#mesa button").count(),10)
+        self.assertEqual(page.locator("#mesa button").count(),11)
         clutter = page.locator("#mesa").evaluate("""root => {const walker = document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const text=[];while(walker.nextNode()){const node=walker.currentNode;if(node.textContent.trim() && !node.parentElement.closest('.scene-header,svg')) text.push(node.textContent.trim());}return text;}""")
         self.assertEqual(clutter,[])
         for width,height in ((1440,1000),(1858,887),(390,844),(320,568)):
@@ -176,13 +176,34 @@ class CivicTableTests(unittest.TestCase):
         self.assertEqual(config["outputDirectory"],"public")
         self.assertEqual(config["buildCommand"],"npm run build")
         sources = self.page.evaluate("[...new Set([...document.images].map(image => image.getAttribute('src')).filter(Boolean))]")
-        self.assertEqual(len(sources),7)
+        self.assertEqual(len(sources),8)
         for source in sources:
             self.assertTrue(source.startswith("assets/imgs/"))
             self.assertTrue((BASE / source).is_file())
         self.assertTrue(self.page.locator(".table-background").evaluate("e=>e.complete && e.naturalWidth === 1678"))
         self.assertEqual(self.page.evaluate("[...document.images].filter(e => e.currentSrc && (!e.complete || !e.naturalWidth)).length"),0)
         self.assertNotIn("@@",(BASE / "index.html").read_text(encoding="utf-8"))
+
+    def test_08_atlas_notebook_and_loteria_layout(self):
+        page = self.page
+        self.assertEqual(page.title(), "La mesa cívica · Hackea la participación")
+        page.locator("#atlas-opener").click()
+        self.assertEqual(page.locator("#atlas-title").inner_text(), "32 estados, seis elecciones")
+        self.assertIn("55.83 %", page.locator("#atlas-graphic").inner_text())
+        for _ in range(4):
+            page.locator("#atlas-next").click()
+        self.assertEqual(page.locator("#atlas-pagination").inner_text(), "5 / 5")
+        self.assertIn("26,563", page.locator("#atlas-graphic").inner_text())
+        self.close_object()
+        page.locator("#notebook-opener").click()
+        self.assertEqual(page.locator("#notebook-focus button").count(), 0)
+        self.assertIn("No especificado", page.locator("#notebook-focus").inner_text())
+        self.close_object()
+        page.locator("#loteria-opener").click()
+        page.locator('input[name="loteria-opponent"][value="machine"]').check()
+        page.locator("#loteria-start").click()
+        self.assertEqual(page.locator(".loteria-board-panel").evaluate_all("elements => elements.map(element => element.dataset.side)"), ["machine", "player"])
+        self.assertEqual(page.locator(".loteria-board").evaluate_all("elements => elements.map(element => getComputedStyle(element).borderTopColor)"), ["rgb(110, 37, 48)", "rgb(32, 90, 67)"])
 
 
 if __name__ == "__main__":

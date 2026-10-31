@@ -11,7 +11,7 @@ const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"
 
 test("web project builds static HTML without executing Python", () => {
   const output = execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: root, encoding: "utf8" });
-  assert.match(output, /32 archivos/);
+  assert.match(output, /34 archivos/);
   assert.equal(config.framework, null);
   assert.equal(config.outputDirectory, "public");
   assert.equal(config.buildCommand, "npm run build");
@@ -26,6 +26,10 @@ test("web project builds static HTML without executing Python", () => {
   assert.ok(ignored.includes("public/"));
   assert.ok(!ignored.includes("assets/"));
   assert.ok(fs.existsSync(path.join(root, "index.html")));
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  assert.match(html, /La lotería cívica/);
+  assert.match(html, /Hackea la<br><strong>participación\.<\/strong>/);
+  assert.doesNotMatch(html, /participaciÃ|loterÃ|cÃ­vica|â€“/);
 });
 
 test("deployment builds from HTML and images with no analysis scripts or CSVs present", () => {
@@ -36,7 +40,7 @@ test("deployment builds from HTML and images with no analysis scripts or CSVs pr
   try {
     for (const name of ["index.html", "package.json", "vercel.json", "scripts", "assets/imgs", "assets/modelos-3d/pirinola/pirinola-3d.js", "assets/modelos-3d/balero/balero-3d.js", "assets/modelos-3d/dados/dados-3d.js"]) fs.cpSync(path.join(root, name), path.join(isolated, name), { recursive: true });
     const output = execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: isolated, encoding: "utf8" });
-    assert.match(output,/32 archivos/);
+    assert.match(output,/34 archivos/);
     assert.equal(fs.existsSync(path.join(isolated,"analysis")),false);
     assert.equal(fs.existsSync(path.join(isolated,"output")),false);
     const published = fs.readFileSync(path.join(isolated,"public/index.html"),"utf8");
@@ -74,7 +78,7 @@ test("static server exposes the complete web and keeps analysis files private", 
   const digest = bytes => createHash("sha256").update(bytes).digest("hex");
   assert.equal(digest(html), digest(fs.readFileSync(path.join(root, "public/index.html"))));
   const images = [...html.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1]);
-  assert.equal(images.length,9);
+  assert.equal(images.length,10);
   for (const name of images) {
     const image = await fetch(`${address}/${name}`);
     assert.equal(image.status, 200);

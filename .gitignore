@@ -7,6 +7,7 @@ Thumbs.db
 .env.*
 output/**/*.tmp
 .local/
+entregables_finales/*.txt
 node_modules/
 .vercel/
 public/

@@ -38,6 +38,7 @@
   let dadosLoading = null;
   let baleroTimer = 0;
   let notebookTimer = 0;
+  let atlasTimer = 0;
   const gameContent = CivicGames.createContent(JSON.parse($("ccpc-data").textContent));
   const baleroDeck = CivicGames.createDeck(gameContent.balero);
   const dadosRoller = CivicGames.createDadosRoller(gameContent.dados);
@@ -353,6 +354,17 @@
     }, reduced.matches ? 0 : 560);
   }
 
+  function openAtlas() {
+    if (dialog.open || atlasTimer) return;
+    const button = $("atlas-opener");
+    button.classList.add("is-opening");
+    atlasTimer = setTimeout(() => {
+      atlasTimer = 0;
+      if (dialog.open) { button.classList.remove("is-opening"); return; }
+      openObject("atlas", button);
+    }, reduced.matches ? 0 : 560);
+  }
+
   function finishClose() {
     if (!closing) return;
     if (motion) motion.cancel();
@@ -395,7 +407,7 @@
     document.documentElement.style.overflow = scrollOverflow;
     document.body.classList.remove("object-returning");
     source.style.visibility = "";
-    if (dialog.dataset.object === "notebook") source.classList.remove("is-opening");
+    if (["notebook", "atlas"].includes(dialog.dataset.object)) source.classList.remove("is-opening");
     source.focus({ preventScroll: true });
     source = null;
     closing = false;
@@ -423,7 +435,7 @@
       motion.reverse();
     } else {
       if (motion) motion.cancel();
-      motion = surface.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: dialog.dataset.object === "notebook" ? notebookOriginTransform() : ["pirinola", "balero", "dados"].includes(dialog.dataset.object) ? "translate(0,16px) scale(.96)" : originTransform(), opacity: .5 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
+      motion = surface.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: ["notebook", "atlas"].includes(dialog.dataset.object) ? notebookOriginTransform() : ["pirinola", "balero", "dados"].includes(dialog.dataset.object) ? "translate(0,16px) scale(.96)" : originTransform(), opacity: .5 }], { duration: 280, fill: "both", easing: "cubic-bezier(.22,1,.36,1)" });
       motion.onfinish = finishClose;
     }
   }
@@ -459,6 +471,7 @@
     surface.classList.toggle("is-balero", kind === "balero");
     surface.classList.toggle("is-dados", kind === "dados");
     surface.classList.toggle("is-notebook", kind === "notebook");
+    surface.classList.toggle("is-atlas", kind === "atlas");
     surface.classList.toggle("is-loteria", kind === "loteria");
     $("map-focus").hidden = kind !== "map";
     $("card-focus").hidden = kind !== "card";
@@ -466,6 +479,7 @@
     $("balero-focus").hidden = kind !== "balero";
     $("dados-focus").hidden = kind !== "dados";
     $("notebook-focus").hidden = kind !== "notebook";
+    $("atlas-focus").hidden = kind !== "atlas";
     $("loteria-focus").hidden = kind !== "loteria";
     if (kind === "dados") {
       $("dados-canvas-mount").append($("dados-canvas"));
@@ -502,12 +516,12 @@
     }
     dialog.dataset.object = kind;
     dialog.dataset.animating = String(!reduced.matches);
-    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : kind === "loteria" ? "loteria-title" : "notebook-title");
+    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : kind === "loteria" ? "loteria-title" : kind === "atlas" ? "atlas-title" : "notebook-title");
     if (kind === "card") showCard(key);
     scrollOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     dialog.showModal();
-    const start = kind === "notebook" ? notebookOriginTransform() : originTransform();
+    const start = ["notebook", "atlas"].includes(kind) ? notebookOriginTransform() : originTransform();
     source.style.visibility = "hidden";
     $("close-object").focus({ preventScroll: true });
     dimmer.style.opacity = ".58";
@@ -536,7 +550,7 @@
   }
 
   $("notebook-opener").addEventListener("click", openNotebook, { signal });
-  $("notebook-to-map").addEventListener("click", () => closeObject(() => openObject("map", $("map-opener"))), { signal });
+  $("atlas-opener").addEventListener("click", openAtlas, { signal });
   $("dados-opener").addEventListener("click", () => openObject("dados", $("dados-opener")), { signal });
   $("dados-roll").addEventListener("click", () => {
     if (!dadosViewer || $("dados-roll").disabled || closing) return;
@@ -649,6 +663,7 @@
     if (pirinolaViewer) pirinolaViewer.destroy();
     clearTimeout(baleroTimer);
     clearTimeout(notebookTimer);
+    clearTimeout(atlasTimer);
     if (baleroViewer) baleroViewer.destroy();
     if (dadosViewer) dadosViewer.destroy();
     dimmer.remove();

@@ -21,7 +21,14 @@
   function finish() {
     if (!game.winner) return;
     clearTimers();
-    $("loteria-status").textContent = game.winner === "player" ? "¡Lotería! Llenaste tu tablero." : "La máquina completó su tablero. Puedes jugar otra partida.";
+    const status = $("loteria-status");
+    status.dataset.winner = game.winner;
+    status.replaceChildren();
+    const headline = document.createElement("strong");
+    headline.textContent = game.winner === "player" ? "¡LOTERÍA!" : "Ganó la máquina";
+    const detail = document.createElement("span");
+    detail.textContent = game.winner === "player" ? "Llenaste tu tablero. ¡Bien jugado!" : "Completó su tablero. Puedes jugar otra partida.";
+    status.append(headline, detail);
     $("loteria-call").disabled = true;
     $("loteria-restart").hidden = false;
   }
@@ -77,6 +84,7 @@
   }
 
   function draw() {
+    delete $("loteria-status").dataset.winner;
     const card = game.draw();
     if (!card) {
       $("loteria-status").textContent = "Ya salieron las 18 cartas. Marca las que tengas pendientes.";
@@ -108,6 +116,7 @@
     const size = Number(document.querySelector('input[name="loteria-size"]:checked').value);
     const opponent = document.querySelector('input[name="loteria-opponent"]:checked').value === "machine";
     game = CivicLoteria.createGame({ size, opponent });
+    delete $("loteria-status").dataset.winner;
     $("loteria-setup").hidden = true;
     $("loteria-play").hidden = false;
     $("loteria-machine-panel").hidden = !opponent;
@@ -121,6 +130,7 @@
   $("loteria-restart").addEventListener("click", () => {
     clearTimers();
     game = null;
+    delete $("loteria-status").dataset.winner;
     $("loteria-setup").hidden = false;
     $("loteria-play").hidden = true;
     $("loteria-restart").hidden = true;
