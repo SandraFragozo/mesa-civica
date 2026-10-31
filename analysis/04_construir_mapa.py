@@ -94,7 +94,7 @@ def main():
         template = template.replace(token, value)
     destination = BASE / "index.html"
     destination.parent.mkdir(parents=True, exist_ok=True)
-    images = [BASE / "assets/imgs/backgrounds/bg-mesa-dibujo.png", *[BASE / "assets/imgs/loteria" / filename for filename in ["el-primer-voto.jpg", "la-intermedia.jpg", "la-votante.jpg", "la-inclusion.jpg", "reverso.jpg"]]]
+    images = [BASE / "assets/imgs/backgrounds/bg-mesa-dibujo.png", *[BASE / "assets/imgs/loteria" / filename for filename in ["18-el-primer-voto.jpg", "22-la-intermedia.jpg", "61-la-votante.jpg", "24-la-inclusion.jpg", "reverso.jpg"]]]
     if any(not source.is_file() for source in images):
         raise ValueError("Faltan imágenes necesarias en assets/imgs")
     temporary = destination.with_suffix(".html.tmp")

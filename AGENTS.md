@@ -1,32 +1,60 @@
-# AGENTS.md — Contexto Maestro del Proyecto (Hackathon INE 2026 - Reto 3)
+# Instrucciones del proyecto para agentes
 
-## 1. Objetivo del Proyecto
-Este repositorio contiene el pipeline de datos y el prototipo visual interactivo para el concurso nacional **"Hackea la participación: Datos que construyen democracia"** del Instituto Nacional Electoral (INE / DECEYEC), específicamente para el **Reto 3: Comunicación y visualización con impacto público (Storytelling con datos)**, usando los Conteos Censales de Participación Ciudadana (CCPC) 2009–2024.
+Este archivo guía a Codex, Antigravity y otros agentes que trabajen en `Proyecto INE/`. El objetivo es mantener el sitio web de «Hackea la participación» para el Reto 3 del INE con los Conteos Censales de Participación Ciudadana (CCPC) 2009–2024. El sitio sirve a jóvenes y equipos de educación cívica, con metodología desplegable. Abre `Proyecto INE/` como raíz del proyecto antes de editar o ejecutar comandos.
 
-- **Público objetivo principal:** Jóvenes de 18 a 30 años y equipos de educación cívica de las 32 Juntas Locales Ejecutivas del INE.
-- **Mensaje central:** Acompañar la participación ciudadana más allá del primer voto (18-19 años) y durante las elecciones intermedias, visibilizando el liderazgo de las mujeres (especialmente rurales) y las nuevas modalidades de inclusión 2024.
-- **Modo de trabajo actual (Máquina secundaria - Solo Frontend/UI):** En este entorno nos enfocamos exclusivamente en el rediseño visual e interactivo dentro de `output/mapa_interactivo/`. **NO se deben volver a correr ni modificar los scripts de procesamiento de datos crudos (`01_auditoria_rapida.py`, `02_generar_cubos.py`, `03_hallazgos_storytelling.py`)** a menos que se solicite explícitamente, ya que las carpetas pesadas de CSVs crudos (`Datos/`) residen en la máquina principal.
+## Estructura vigente
 
----
+| Ruta | Función |
+| --- | --- |
+| `index.html` | Entrada pública del sitio. Se genera; no se edita a mano. |
+| `web/index.template.html`, `web/scene.css`, `web/scene.js` | Plantilla, escena de la mesa e interacciones de sus objetos. |
+| `web/styles.css`, `web/app.js`, `web/data-engine.js`, `web/game-content.js` | Mapa ampliado, cálculos y contenidos de los juegos. |
+| `assets/imgs/` | Fondo, cartas de lotería y cubierta del cuaderno. |
+| `assets/modelos-3d/{balero,dados,pirinola}/` | Scripts WebGL, modelos `.glb`, texturas y visores de prueba. El sitio carga los tres scripts de forma diferida. |
+| `assets/mapas/` | Dos SVG de origen y `vinculacion_edocve.json`, que relaciona las piezas geográficas con las 32 entidades. |
+| `analysis/01_auditoria_rapida.py` a `analysis/03_hallazgos_storytelling.py` | Procesamiento de CSV originales y análisis; requieren los datos crudos externos. |
+| `analysis/04_construir_mapa.py` | Lee los cubos ya generados e inserta datos, SVG, CSS y JavaScript en `index.html`. |
+| `output/` | Cuatro cubos y reportes derivados de los CCPC. Es fuente de datos para el generador, no raíz del sitio. |
+| `scripts/build.mjs`, `public/`, `vercel.json` | Build estático y salida de publicación para Vercel. `public/` es generado y está ignorado en Git. |
+| `tests/`, `analysis/tests/` | Pruebas de datos, navegador, juegos, diseño responsivo y despliegue. |
 
-## 2. Reglas de Rigor Metodológico (Obligatorias por Rúbrica del INE)
-Para mantener el puntaje máximo en **Apego a la temática (35 pts)** y **Claridad y solidez (30 pts)**:
-1. **Fórmulas exactas:** Siempre se suman conteos (`LN`, `SV`, `NV`, `NS`) antes de calcular porcentajes; nunca se promedian porcentajes.
-   - `TASA_PARTICIPACION = (SV / LN) * 100`
-   - `TASA_ABSTENCION = (NV / LN) * 100`
-   - `TASA_NS = (NS / LN) * 100`
-2. **Tratamiento de `NS` (No especificados):** `NS` NO se reclasifica ni se suma a la abstención (`NV`). Siempre debe explicarse que procede de cuadernillos de lista nominal no disponibles o sin marca, y que los datos excluyen casillas especiales y voto en el extranjero.
-3. **Advertencia de Base Pequeña:** Cualquier subgrupo con `LN < 100` (ej. registros `No binario` en 2024) debe mostrar explícitamente sus conteos absolutos y la etiqueta `LN < 100: base pequeña`.
-4. **Modalidades Especiales 2024 (`Prisión Preventiva` y `Voto Anticipado`):** Sus archivos originales carecen de denominador (`LN`) y de `EDAD`. Se presentan estrictamente como **conteos de registros** separados del universo ordinario, sin inventar tasas de participación.
+El navegador usa los datos incrustados en `index.html`: no requiere Python, CSV ni una API durante la visita. El build de Vercel ejecuta `npm run build` y publica `public/`; el mismo resultado funciona en un servidor estático tradicional. Mantén `index.html` como entrada pública y los scripts de análisis en `analysis/`.
 
----
+## Flujo de trabajo
 
-## 3. Datos Reales Verificados (Para usar en UI, Cartas, Juegos y Fallbacks)
-Si algún CSV de `output/` no está cargado en memoria en el navegador, la interfaz debe consumir los JSON/JS ya generados en `output/mapa_interactivo/` o usar estas cifras oficiales ya conciliadas (54,872,712 filas ordinarias procesadas):
+1. Para cambiar el sitio, edita los archivos fuente en `web/` o los recursos en `assets/`. Mantén las rutas locales relativas y el funcionamiento sin conexión.
+2. Si cambias plantilla, estilos, lógica incrustada, SVG o datos de origen, regenera `index.html` desde la raíz con `python analysis/04_construir_mapa.py`. En Windows puedes usar `.venv\Scripts\python.exe` si ese entorno ya existe.
+3. Ejecuta `npm run build` para verificar la salida estática. No edites `public/` a mano.
+4. Ejecuta `npm test` y `python analysis/run_tests.py` según el alcance del cambio. Las pruebas de navegador de Python requieren Playwright y un navegador local.
+5. Comprueba los cambios visuales con `npm run dev` en `http://127.0.0.1:4170/`; reinicia el servidor tras una iteración importante. Usa `npm run preview` para revisar `public/` después del build.
 
-### A. Resumen Nacional por Elección (2009–2024)
-| AELEC | TIPO_ELECCION | LN | SV | NV | NS | Participación (%) | Abstención (%) | NS (%) |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+Los CSV crudos de `Datos/` no forman parte del sitio ni están garantizados en esta máquina. Ya se procesaron 54,872,712 filas ordinarias. No ejecutes ni modifiques `analysis/01_auditoria_rapida.py`, `analysis/02_generar_cubos.py` o `analysis/03_hallazgos_storytelling.py` sin una solicitud explícita. Los cuatro cubos existentes en `output/` permiten reconstruir el sitio con `analysis/04_construir_mapa.py`.
+
+## Interfaz implementada
+
+La escena es una mesa ilustrada que se acerca con el scroll hasta un límite. En ella están el mapa escolar, cuatro cartas de lotería, el cuaderno, el balero, la pirinola y los dados. Cada objeto se abre en un diálogo y vuelve a la mesa. Conserva el diseño, las animaciones, la proporción de los objetos y la separación entre ellos en móvil y escritorio salvo que la tarea pida cambiarlos.
+
+El mapa ampliado ofrece filtros por elección, sexo registrado, tipo de sección, edad y entidad. Sus cuatro modos son participación, caída tras el primer voto, brecha presidencial frente a intermedia y brecha de género e inclusión. Mantiene un panel estatal, curvas, evolución, territorio, modalidades especiales, detalle municipal y metodología. Las 32 claves `EDOCVE` deben seguir mapeadas una a una; las 84 piezas SVG incluyen islas. El contorno seleccionado debe dibujarse completo sobre los estados vecinos.
+
+La vinculación geográfica tiene pruebas y una huella del SVG de origen. Si una tarea requiere cambiar el mapa o `vinculacion_edocve.json`, verifica otra vez las 32 claves, las 84 piezas y el contorno antes de regenerar el sitio.
+
+Las cartas abren cuatro historias con anverso y reverso. El balero tiene ocho preguntas con animaciones de acierto y fallo. La pirinola tiene ocho mitos, ocho realidades y ocho preguntas distintas de las del balero. Los dados tienen una interacción 3D para lanzarlos; no muestran todavía una cápsula electoral de estado y año. El cuaderno contiene la guía existente. Atlas, credencial y cartones con frijoles son ideas futuras: no los describas como funciones ya publicadas.
+
+En `assets/imgs/loteria/`, las cartas activas son `18-el-primer-voto.jpg`, `22-la-intermedia.jpg`, `61-la-votante.jpg`, `24-la-inclusion.jpg` y `reverso.jpg`. Otros archivos de esa carpeta pueden ser recursos para trabajo posterior. Los `.glb` y las texturas de `assets/modelos-3d/` son recursos fuente; el build actual publica los tres scripts WebGL que usa el sitio.
+
+## Rigor de los datos
+
+- Suma `LN`, `SV`, `NV` y `NS` antes de calcular tasas. Participación = `SV / LN × 100`; abstención = `NV / LN × 100`; no especificado = `NS / LN × 100`. Nunca promedies porcentajes de grupos.
+- Conserva `NS` separado de `NV`: no equivale a abstención. Si `LN = 0`, no muestres una tasa de cero como si hubiera observaciones.
+- Si `LN < 100`, presenta los conteos absolutos y la advertencia `LN < 100: base pequeña`.
+- Voto Anticipado y Prisión Preventiva de 2024 son conteos de registros separados del universo ordinario. Sus archivos no contienen denominador `LN` ni edad; no inventes tasas o grupos de edad.
+- La categoría `No binario` está disponible en estos cubos para 2024. Su ausencia en 2009–2021 no significa una tasa de cero. Las seis elecciones son cortes transversales: sumar sus `LN` no cuenta personas únicas.
+- El universo de los cuadernillos capturados excluye casillas especiales y voto desde el extranjero. Explica el alcance al presentar comparaciones.
+
+### Cifras nacionales conciliadas
+
+| Elección | Tipo | LN | SV | NV | NS | SV/LN | NV/LN | NS/LN |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 2009 | Intermedia | 77,481,831 | 33,316,974 | 42,298,963 | 1,865,894 | 43.00% | 54.59% | 2.41% |
 | 2012 | Presidencial | 76,490,962 | 47,383,154 | 28,939,159 | 168,649 | 61.95% | 37.83% | 0.22% |
 | 2015 | Intermedia | 83,563,462 | 36,926,612 | 41,517,874 | 5,118,976 | 44.19% | 49.68% | 6.13% |
@@ -34,48 +62,18 @@ Si algún CSV de `output/` no está cargado en memoria en el navegador, la inter
 | 2021 | Intermedia | 93,532,133 | 46,389,189 | 43,099,624 | 4,043,320 | 49.60% | 46.08% | 4.32% |
 | 2024 | Presidencial | 98,330,348 | 54,899,228 | 37,105,466 | 6,325,654 | 55.83% | 37.74% | 6.43% |
 
-### B. Los 4 Sectores / Hallazgos Principales
-1. **Sector 1 — La Curva de la Edad (Caída después de los 18-19 años):**
-   - En 2024: `18-19 años` = **53.06%**, cae en `20-24 años` a **45.20%** (**-7.86 pp**) y en `25-29 años` a **44.15%** (**-8.91 pp**).
-   - En 2021: `18-19 años` = **49.36%**, `20-24` = **39.87%** (**-9.49 pp**), `25-29` = **37.91%** (**-11.46 pp**).
-   - **Hallazgo constante:** En las 6 elecciones (2009–2024), el primer grupo de 30 años o más que recupera o supera la tasa de los 18-19 años es siempre el de **40-49 años**.
-2. **Sector 2 — Brecha de Género y Territorio (2024):**
-   - **Rural:** Mujeres **61.13%** (`SV=5,399,210 / LN=8,832,918`) vs. Hombres **49.97%** (`SV=4,188,986 / LN=8,383,603`) -> Brecha: **+11.16 pp**.
-   - **Mixta:** Mujeres **58.83%** vs. Hombres **49.24%** -> Brecha: **+9.59 pp**.
-   - **Urbana:** Mujeres **60.08%** vs. Hombres **51.90%** -> Brecha: **+8.18 pp**.
-3. **Sector 3 — Elecciones Presidenciales vs. Intermedias (Acumulado 2009–2024):**
-   - **Estados con mayor caída en intermedias:** 1) Ciudad de México (**+22.82 pp**: 67.40% pres. vs 44.57% inter.), 2) Quintana Roo (**+18.00 pp**: 55.02% vs 37.03%), 3) Tlaxcala (**+17.13 pp**: 63.66% vs 46.53%), 4) Aguascalientes (**+16.83 pp**), 5) Puebla (**+16.75 pp**).
-   - **Grupos de edad con mayor caída en intermedias:** 1) `30-39 años` (**+13.64 pp**: 54.62% vs 40.97%), 2) `25-29 años` (**+13.52 pp**: 48.41% vs 34.89%), 3) `20-24 años` (**+13.00 pp**: 49.19% vs 36.19%).
-4. **Sector 4 — Radiografía de Inclusión 2024:**
-   - **Prisión Preventiva:** **26,563** registros nacionales (Top: Edomex 4,719; Jalisco 2,938; Nuevo León 1,875; CDMX 1,799; Puebla 1,560; Sonora 1,434; Veracruz 222).
-   - **Voto Anticipado:** **3,449** registros nacionales (Top: CDMX 461; Veracruz 221; Jalisco 216; Edomex 196; Aguascalientes 169; Nuevo León 163).
-   - **No binario (Universo ordinario 2024):** present en 18 estados con `LN = 105`, `SV = 79` (**75.24%**), `NV = 23` (**21.90%**), `NS = 3` (**2.86%**). Destacan CDMX (`LN=32, SV=21`, 65.62%) y Jalisco (`LN=25, SV=20`, 80.00%).
+Hallazgos de referencia para las historias, siempre sujetos al perfil activo y a los cubos:
 
----
+- Edad: en 2024, 18–19 años registró 53.06%, 20–24 registró 45.20% y 25–29 registró 44.15%. En 2021 fueron 49.36%, 39.87% y 37.91%, respectivamente. En las seis elecciones, el primer grupo de 30 años o más que recupera la tasa de 18–19 es 40–49.
+- Género y territorio en 2024: mujeres frente a hombres, rural 61.13% frente a 49.97% (+11.16 puntos), mixta 58.83% frente a 49.24% (+9.59), urbana 60.08% frente a 51.90% (+8.18). En rural, los conteos son mujeres `SV=5,399,210 / LN=8,832,918` y hombres `SV=4,188,986 / LN=8,383,603`.
+- Elecciones: la brecha presidencial menos intermedia acumulada es mayor en Ciudad de México (+22.82 puntos), Quintana Roo (+18.00), Tlaxcala (+17.13), Aguascalientes (+16.83) y Puebla (+16.75). Por edad destacan 30–39 (+13.64), 25–29 (+13.52) y 20–24 (+13.00).
+- Inclusión 2024: Prisión Preventiva tiene 26,563 registros y Voto Anticipado, 3,449. En el universo ordinario, `No binario` reúne `LN=105`, `SV=79`, `NV=23` y `NS=3`, distribuidos en 18 entidades. Muestra bases estatales pequeñas con sus conteos.
 
-## 4. Concepto Visual de la Interfaz: "La Mesa de la Democracia"
-La aplicación web en `output/mapa_interactivo/` debe abandonar la apariencia de formulario plano gubernamental y presentar una **mesa tradicional mexicana interactiva** dirigida a jóvenes de 18 a 30 años:
+## Reglas de colaboración
 
-- **Fondo (`assets/fondo_mesa.png`):** Mesa metálica blanca con bordes oscuros y esquinas cromadas.
-- **Centro — Mapa Escolar de Papelería (`assets/marco_mapa_escolar.png` + `Mapa MX Escala Grises.svg`):**
-  - El mapa vectorial SVG (64 piezas agrupadas en las 32 entidades `EDOCVE` 1-32) se muestra al centro como un mapa escolar clásico de primaria con colores vivos multipaleta.
-  - Al hacer clic en un estado o expandir el mapa, despliega las vistas por pestañas, filtros demográficos y gráficas con paletas de color vivas y diferenciadas por cada uno de los 4 sectores.
-- **Esquina Inferior Derecha — Las 4 Cartas de Lotería (Giro 3D / Flip Cards):**
-  1. `assets/carta_1_jovenes.png` (#18 EL PRIMER VOTO): Revela al reverso los datos del Sector 1 (Curva de edad 18-19 vs 20-29 y recuperación a los 40-49).
-  2. `assets/carta_2_mujeres.png` (#61 LA MUJER RURAL): Revela el Sector 2 (Ventaja femenina rural +11.16 pp y urbana +8.18 pp).
-  3. `assets/carta_3_intermedias.png` (#22 CADA SEIS AÑOS): Revela el Sector 3 (Caída en intermedias por estado y edad).
-  4. `assets/carta_4_inclusion.png` (#24 NUEVAS VOCES): Revela el Sector 4 (Prisión preventiva, Voto anticipado y registros No binarios).
-- **Esquina Inferior Izquierda — Materiales Escolares:**
-  - `assets/obj_cuaderno_norma.png` (Cuaderno amarillo Norma): Abre el instructivo/guía del recorrido interactivo y créditos.
-  - `assets/obj_atlas_mexico.png` (Libro Atlas de México SEP): Abre el explorador profundo a doble página con el **Buscador de Acercamiento Municipal**, tablas detalladas y la sección metodológica completa ("Cómo leer estos datos").
-- **Derecha — Credencial para Votar (`assets/obj_ine.png`):**
-  - Abre el **"Espejo Cívico Personalizado"**: el joven elige su Estado, Edad, Sexo y Tipo de Sección, ve cuánto vota su grupo en su estado y recibe información sobre por qué es vital tramitar y mantener vigente su INE para figurar en la Lista Nominal (`LN`).
-- **Arriba Izquierda — Cartones de Lotería (`assets/obj_tablas_loteria.png` + `assets/frijolito.png`):**
-  - Minijuego de **"Mitos vs. Realidades"** colocando frijolitos virtuales sobre afirmaciones electorales respaldadas por datos CCPC.
-- **Centro Superior — Pirinola (`assets/obj_pirinola.png`):**
-  - Gira con animación entre sus 6 caras (`Pon 1`, `Pon 2`, `Toma 1`, `Toma 2`, `Toma Todo`, `Todos Ponen`) disparando retos rápidos y simulaciones sobre abstención (`NV`) y participación (`SV`).
-- **Centro Izquierda — Balero (`assets/obj_balero.png`):**
-  - Minijuego de precisión de 1 clic conectado con la metáfora de la constancia electoral entre los 18 y los 40 años.
-- **Arriba Derecha — Dados (`assets/obj_dados.png`):**
-  - Tira al azar un Estado (`1-32`) + un Año (`2009-2024`) mostrando una cápsula de datos reales de esa entidad.
-- **Respaldo de Imágenes (Fallbacks):** Si algún archivo `.png` dentro de `output/mapa_interactivo/assets/` aún no ha sido colocado, el código debe renderizar un SVG ilustrativo temporal con la estética exacta del objeto y permitir reemplazarlo transparentemente en cuanto el archivo `.png` exista en la carpeta.
+- No añadas comentarios nuevos al código; conserva los comentarios existentes de otras personas.
+- No cambies la apariencia, las animaciones ni la disposición fuera del alcance de la solicitud. Mantén carga diferida y pausa de los objetos 3D fuera de vista; libera recursos y listeners cuando se desmonten.
+- Mantén el sitio portable y sin dependencias de ejecución de un proveedor de hosting. Verifica teclado, foco, texto alternativo, tamaño de medios y ausencia de desbordes en pantallas pequeñas.
+- No crees reportes o instrucciones adicionales salvo que se pidan. Conserva dentro de `Proyecto INE/` los archivos del proyecto y elimina artefactos temporales prescindibles.
+- Verifica las habilidades y los hooks del entorno al iniciar un proyecto o justo cuando necesites usarlos; evita repetir esa comprobación en cada solicitud y avisa si fallan.
+- Deja los cambios de cada tarea en *staged* para revisión; nunca ejecutes `git commit`. Excluye del staging `.venv/`, `public/`, `.local/` y otros archivos locales ignorados. Propón un título y una descripción breve para el commit.

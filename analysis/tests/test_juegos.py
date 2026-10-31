@@ -32,8 +32,8 @@ class CivicGamesTests(unittest.TestCase):
         self.page = self.context.new_page()
         self.errors = []
         self.page.on("pageerror",lambda error:self.errors.append(str(error)))
-        self.page.route("**/assets/balero/balero-3d.js",lambda route:route.fulfill(content_type="text/javascript",body="""window.__tricks=[];window.Balero3D={createViewer(canvas,options){return {setPose(){},setPaused(){},setResting(){},destroy(){},playCapirucho(){window.__tricks.push(true);options.onTrickComplete(true)},playMiss(){window.__tricks.push(false);options.onTrickComplete(false)}}}};"""))
-        self.page.route("**/assets/pirinola/pirinola-3d.js",lambda route:route.fulfill(content_type="text/javascript",body="""window.Pirinola3D={createViewer(canvas,options){return {setPaused(){},setResting(){},rotateBy(){},destroy(){},spin(){options.onSettle({word:window.__face||'PREGUNTA'})}}}};"""))
+        self.page.route("**/assets/modelos-3d/balero/balero-3d.js",lambda route:route.fulfill(content_type="text/javascript",body="""window.__tricks=[];window.Balero3D={createViewer(canvas,options){return {setPose(){},setPaused(){},setResting(){},destroy(){},playCapirucho(){window.__tricks.push(true);options.onTrickComplete(true)},playMiss(){window.__tricks.push(false);options.onTrickComplete(false)}}}};"""))
+        self.page.route("**/assets/modelos-3d/pirinola/pirinola-3d.js",lambda route:route.fulfill(content_type="text/javascript",body="""window.Pirinola3D={createViewer(canvas,options){return {setPaused(){},setResting(){},rotateBy(){},destroy(){},spin(){options.onSettle({word:window.__face||'PREGUNTA'})}}}};"""))
         self.page.goto(self.url,wait_until="load")
 
     def tearDown(self):

@@ -1759,6 +1759,7 @@
       autoRotateSpeed: 0.42,
       pose: "showcase",
       resting: false,
+      restingScale: 1,
       onPoseChange: null,
       onTrickComplete: null
     }, userOptions || {});
@@ -2059,7 +2060,9 @@
       gl.enable(gl.CULL_FACE);
 
       const aspect = canvas.width / Math.max(1, canvas.height);
-      const fov = aspect < 0.85 ? 44 * DEG : 36 * DEG;
+      const baseFov = aspect < 0.85 ? 44 * DEG : 36 * DEG;
+      const restingScale = state.restingRoll ? Math.max(0.1, Number(opts.restingScale) || 1) : 1;
+      const fov = 2 * Math.atan(Math.tan(baseFov / 2) / restingScale);
       const eye = [0, 0.15, 7.65];
       const proj = mat4Perspective(fov, aspect, 0.5, 25.0);
       const view = mat4LookAt(eye, [0, 0.08, 0], [0, 1, 0]);

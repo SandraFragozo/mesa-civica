@@ -25,6 +25,32 @@
   };
   const lifecycle = new AbortController();
   const signal = lifecycle.signal;
+  const mapOutlines = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  mapOutlines.id = "map-outlines";
+  mapOutlines.setAttribute("aria-hidden", "true");
+  mapOutlines.setAttribute("pointer-events", "none");
+  const outlineLayers = {};
+  for (const kind of ["hover", "selection"]) {
+    const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    layer.id = `map-outline-${kind}`;
+    layer.setAttribute("class", `map-outline map-outline-${kind}`);
+    outlineLayers[kind] = layer;
+    mapOutlines.append(layer);
+  }
+  $("mexico-map").append(mapOutlines);
+
+  function outlineState(kind, code) {
+    const layer = outlineLayers[kind];
+    if (layer.dataset.state === String(code || 0)) return;
+    layer.dataset.state = String(code || 0);
+    const group = code ? $("mexico-map").querySelector(`.state[data-edocve="${Number(code)}"]`) : null;
+    layer.replaceChildren(...(group ? [...group.querySelectorAll("path")].map(source => {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", source.getAttribute("d"));
+      path.setAttribute("fill-rule", source.getAttribute("fill-rule") || "nonzero");
+      return path;
+    }) : []));
+  }
   let mapMetrics = new Map();
   let mapScale = { min: 0, max: 100 };
   let scheduled = 0;
@@ -32,8 +58,6 @@
   let activeTip = null;
   let tipLocation = null;
   let selectedPanel = "summary";
-  let quizTopic = "zone";
-  let quizGuess = null;
   let stackAnimation = null;
   const visibleCharts = new Set();
   const dirtyCharts = new Set(["age", "history"]);
@@ -131,6 +155,7 @@
       group.setAttribute("aria-pressed", String(state === filters.state));
       group.setAttribute("aria-label", `${name(state)}. ${modes[filters.mode].legend}: ${metricLabel(metric.value)}. LN: ${number(metric.counts.ln)}. Seleccionar entidad.`);
     });
+    outlineState("selection", filters.state);
     $("legend-title").textContent = modes[filters.mode].legend + " · escala del perfil";
     $("legend-gradient").style.background = `linear-gradient(to right,${themes[filters.mode].colors.map(value => "#" + value).join(",")})`;
     $("legend-ticks").innerHTML = Array.from({ length: 5 }, (_, index) => mapScale.min + (mapScale.max - mapScale.min) * index / 4).map(value => `<span>${Number(value.toFixed(2))}${filters.mode === "participation" ? "%" : " pp"}</span>`).join("");
@@ -194,32 +219,6 @@
     $("impact-context").textContent = filters.mode === "participation" ? `${period()} · SV/LN` : `${period()} · puntos porcentuales`;
   }
 
-  function renderQuiz() {
-    const criteria = engine.effective(filters);
-    const topics = {
-      zone: { question: "¿Quién participa más: el campo o la ciudad?", labels: ["Campo · Rural", "Ciudad · Urbana"], queries: [{ section: 2 }, { section: 0 }], note: "Compara Rural y Urbana; sustituye el filtro de zona." },
-      gender: { question: "¿Quién participa más: mujeres u hombres?", labels: ["Mujeres", "Hombres"], queries: [{ sex: 1 }, { sex: 0 }], note: "Compara ambos sexos; sustituye el filtro de sexo." },
-      age: { question: "¿Quién participa más: 18-19 o 25-29 años?", labels: ["18-19 años", "25-29 años"], queries: [{ age: 0 }, { age: 2 }], note: "Compara esos dos grupos; sustituye el filtro de edad." }
-    };
-    const topic = topics[quizTopic];
-    const counts = topic.queries.map(query => engine.sum({ ...criteria, ...query }));
-    const values = counts.map(count => rate(count));
-    const missing = values.some(value => value === null);
-    $("quiz-question").textContent = `${name()}: ${topic.question}`;
-    $("quiz-scope").textContent = `${period()} · ${topic.note}`;
-    document.querySelectorAll("[data-quiz]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.quiz === quizTopic)));
-    $("quiz-answers").innerHTML = topic.labels.map((label, index) => `<button type="button" data-guess="${index}" aria-pressed="${quizGuess === index}" ${missing ? "disabled" : ""}>${html(label)}</button>`).join("");
-    const result = $("quiz-result");
-    result.dataset.revealed = String(quizGuess !== null && !missing);
-    if (missing) result.innerHTML = '<strong>Esta comparación queda abierta.</strong><p>Falta una lista nominal positiva en uno de los grupos. Cambia el perfil; la ausencia de datos no equivale a participación cero.</p>';
-    else if (quizGuess === null) result.innerHTML = '<strong>¿Te sorprende tu estado?</strong><p>Elige una respuesta y descubre la comparación real.</p>';
-    else {
-      const winner = values[0] === values[1] ? null : values[0] > values[1] ? 0 : 1;
-      const headline = winner === null ? "Misma tasa en ambos grupos." : `${quizGuess === winner ? "Lo adivinaste" : "Los datos dicen"}: ${topic.labels[winner]}.`;
-      result.innerHTML = `<strong>${html(headline)}</strong>${topic.labels.map((label, index) => `<div class="quiz-fact"><span>${html(label)}</span><strong>${percent(values[index])}</strong></div>`).join("")}<p>LN ${number(counts[0].ln)} frente a ${number(counts[1].ln)}.${counts.some(count => count.ln < 100) ? " LN < 100: base pequeña en al menos un grupo." : " Tasas calculadas con los conteos de cada grupo."}</p>`;
-    }
-  }
-
   function story(metric) {
     $("comparison-values").innerHTML = "";
     if (metric.value === null) {
@@ -275,7 +274,6 @@
     const nb = engine.sum({ state: filters.state, year: 2024, sex: 2, section: criteria.section, age: criteria.age });
     $("nonbinary-summary").innerHTML = `<strong>No binario · conteo ordinario 2024</strong><div class="nb-values">${nb.rows ? `LN ${number(nb.ln)} · SV ${number(nb.sv)} · ${percent(rate(nb))}<br>NV ${number(nb.nv)} · NS ${number(nb.ns)}${nb.ln > 0 && nb.ln < 100 ? "<br>LN &lt; 100: base pequeña" : ""}` : "Sin registros para la edad y sección seleccionadas."}</div><p class="method-note">Se aplican edad y sección; se consulta esta categoría por separado del filtro de sexo.</p>`;
     updateImpact(metric);
-    renderQuiz();
     updateBreakdown(criteria);
     $("age-period").textContent = period();
     $("age-scope").textContent = `${filters.state ? name() + " frente al total nacional" : "Total Nacional"} · ${scope(criteria, false)}. Se muestran todas las edades.`;
@@ -441,12 +439,12 @@
 
   function hideTip() {
     $("tooltip").hidden = true;
+    outlineState("hover", 0);
     activeTip = null;
   }
 
   function render() {
     hideTip();
-    quizGuess = null;
     controls();
     paintMap();
     updatePanel();
@@ -504,18 +502,6 @@
     const button = event.target.closest("[data-rank-state]");
     if (button) selectState(button.dataset.rankState, true);
   }, { signal });
-  document.querySelectorAll("[data-quiz]").forEach(button => button.addEventListener("click", () => {
-    quizTopic = button.dataset.quiz;
-    quizGuess = null;
-    renderQuiz();
-  }, { signal }));
-  $("quiz-answers").addEventListener("click", event => {
-    const button = event.target.closest("[data-guess]");
-    if (!button) return;
-    quizGuess = Number(button.dataset.guess);
-    renderQuiz();
-    if (event.detail === 0) $("quiz-answers").querySelector(`[data-guess="${quizGuess}"]`).focus({ preventScroll: true });
-  }, { signal });
   $("mexico-map").addEventListener("click", event => {
     const state = event.target.closest(".state");
     if (state) selectState(state.dataset.edocve, true);
@@ -526,6 +512,7 @@
   }, { signal });
   document.addEventListener("pointerover", event => {
     const element = event.target.closest(".state,[data-point]");
+    if (element?.classList.contains("state")) outlineState("hover", element.dataset.edocve);
     if (element && element !== activeTip) showTip(element, event);
   }, { signal });
   document.addEventListener("pointermove", event => {
@@ -536,10 +523,12 @@
   }, { signal, passive: true });
   document.addEventListener("focusin", event => {
     const element = event.target.closest(".state,[data-point]");
+    if (element?.classList.contains("state")) outlineState("hover", element.dataset.edocve);
     if (element) showTip(element);
     else hideTip();
   }, { signal });
   document.addEventListener("focusout", hideTip, { signal });
+  $("mexico-map").addEventListener("pointerleave", () => outlineState("hover", 0), { signal });
   document.addEventListener("keydown", event => { if (event.key === "Escape") hideTip(); }, { signal });
   document.addEventListener("scroll", hideTip, { signal, passive: true });
   $("municipal-detail").addEventListener("toggle", () => { if ($("municipal-detail").open) renderMunicipal(); }, { signal });

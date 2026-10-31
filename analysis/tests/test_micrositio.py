@@ -224,23 +224,12 @@ class OfflineDashboardTests(unittest.TestCase):
         self.configure(sex=2)
         self.assertEqual(self.page.locator("[data-rank-state]").count(), 0)
 
-    def test_07_myth_answers_use_real_counts_and_reset(self):
-        frame, _ = self.configure(state=19)
-        cases = {
-            "zone": (frame.loc[frame["TIPOSEC"].eq("Rural")], frame.loc[frame["TIPOSEC"].eq("Urbana")]),
-            "gender": (frame.loc[frame["SEXO"].eq("Mujeres")], frame.loc[frame["SEXO"].eq("Hombres")]),
-            "age": (frame.loc[frame["GRUPO_EDAD"].eq(AGES[0])], frame.loc[frame["GRUPO_EDAD"].eq(AGES[2])]),
-        }
-        for topic, groups in cases.items():
-            self.page.locator(f'[data-quiz="{topic}"]').click()
-            self.page.locator('[data-guess="0"]').click()
-            self.assertEqual(self.page.locator("#quiz-result").get_attribute("data-revealed"), "true")
-            labels = self.page.locator("#quiz-result .quiz-fact strong").all_inner_texts()
-            self.assertEqual(labels, [f"{float(group['SV'].sum() / group['LN'].sum() * 100):,.2f}%" for group in groups])
-            for group in groups:
-                self.assertIn(f"{int(group['LN'].sum()):,}", self.page.locator("#quiz-result").inner_text())
-        self.configure(state=1)
-        self.assertEqual(self.page.locator("#quiz-result").get_attribute("data-revealed"), "false")
+    def test_07_map_keeps_analytic_tools_and_delegates_games(self):
+        self.configure(state=19)
+        self.assertEqual(self.page.locator(".myth-game,#quiz-answers,[data-quiz]").count(),0)
+        self.assertEqual(self.page.locator("[data-mode]").count(),4)
+        self.assertEqual(self.page.locator("#municipal-detail,#metodologia").count(),2)
+        self.assertEqual(self.page.locator("#balero-opener,#pirinola-opener,#dados-opener").count(),3)
 
     def test_08_tabs_stacked_bar_tooltip_and_paired_bars(self):
         frame, counts = self.configure(state=9, sex=0, age=2)

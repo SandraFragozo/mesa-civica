@@ -34,7 +34,7 @@ test("deployment builds from HTML and images with no analysis scripts or CSVs pr
   const isolated = fs.mkdtempSync(path.join(parent, "web-only-"));
   assert.equal(path.dirname(isolated), parent);
   try {
-    for (const name of ["index.html", "package.json", "vercel.json", "scripts", "assets/imgs", "assets/pirinola/pirinola-3d.js", "assets/balero/balero-3d.js", "assets/dados/dados-3d.js"]) fs.cpSync(path.join(root, name), path.join(isolated, name), { recursive: true });
+    for (const name of ["index.html", "package.json", "vercel.json", "scripts", "assets/imgs", "assets/modelos-3d/pirinola/pirinola-3d.js", "assets/modelos-3d/balero/balero-3d.js", "assets/modelos-3d/dados/dados-3d.js"]) fs.cpSync(path.join(root, name), path.join(isolated, name), { recursive: true });
     const output = execFileSync(process.execPath, ["scripts/build.mjs"], { cwd: isolated, encoding: "utf8" });
     assert.match(output,/11 archivos/);
     assert.equal(fs.existsSync(path.join(isolated,"analysis")),false);
@@ -73,7 +73,7 @@ test("static server exposes the complete web and keeps analysis files private", 
   const digest = bytes => createHash("sha256").update(bytes).digest("hex");
   assert.equal(digest(html), digest(fs.readFileSync(path.join(root, "public/index.html"))));
   const images = [...html.matchAll(/<img\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1]);
-  assert.equal(images.length,6);
+  assert.equal(images.length,7);
   for (const name of images) {
     const image = await fetch(`${address}/${name}`);
     assert.equal(image.status, 200);

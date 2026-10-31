@@ -14,10 +14,10 @@
   dimmer.setAttribute("aria-hidden", "true");
   document.body.append(dimmer);
   const cards = {
-    first: { title: "El primer voto", number: "18", image: "el-primer-voto.jpg", mode: "age", panel: "age" },
-    election: { title: "La intermedia", number: "22", image: "la-intermedia.jpg", mode: "election", panel: "history" },
-    women: { title: "La votante", number: "61", image: "la-votante.jpg", mode: "gender", panel: "territory" },
-    inclusion: { title: "La inclusión", number: "24", image: "la-inclusion.jpg", mode: "gender", panel: "inclusion" }
+    first: { title: "El primer voto", number: "18", image: "18-el-primer-voto.jpg", mode: "age", panel: "age" },
+    election: { title: "La intermedia", number: "22", image: "22-la-intermedia.jpg", mode: "election", panel: "history" },
+    women: { title: "La votante", number: "61", image: "61-la-votante.jpg", mode: "gender", panel: "territory" },
+    inclusion: { title: "La inclusión", number: "24", image: "24-la-inclusion.jpg", mode: "gender", panel: "inclusion" }
   };
   const keys = Object.keys(cards);
   let facts = {};
@@ -78,7 +78,7 @@
     if (pirinolaLoading) return pirinolaLoading;
     pirinolaLoading = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "assets/pirinola/pirinola-3d.js";
+      script.src = "assets/modelos-3d/pirinola/pirinola-3d.js";
       script.async = true;
       script.onload = resolve;
       script.onerror = () => reject(new Error("No se cargó la pirinola 3D"));
@@ -125,7 +125,7 @@
     if (dadosLoading) return dadosLoading;
     dadosLoading = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "assets/dados/dados-3d.js";
+      script.src = "assets/modelos-3d/dados/dados-3d.js";
       script.async = true;
       script.onload = resolve;
       script.onerror = () => reject(new Error("No se cargaron los dados 3D"));
@@ -181,7 +181,7 @@
     if (baleroLoading) return baleroLoading;
     baleroLoading = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "assets/balero/balero-3d.js";
+      script.src = "assets/modelos-3d/balero/balero-3d.js";
       script.async = true;
       script.onload = resolve;
       script.onerror = () => reject(new Error("No se cargó el balero 3D"));
@@ -202,6 +202,7 @@
       baleroViewer = api.createViewer($("balero-canvas"), {
         autoRotate: false,
         pose: "open",
+        restingScale: 1.3,
         resting: !(dialog.open && dialog.dataset.object === "balero"),
         onTrickComplete(success) {
           if (!dialog.open || dialog.dataset.object !== "balero" || !baleroAnswered) return;

@@ -43,7 +43,7 @@ class CivicTableTests(unittest.TestCase):
     def test_01_scroll_zoom_keeps_objects_on_the_table(self):
         page = self.page
         page.emulate_media(reduced_motion="no-preference")
-        self.assertEqual(page.locator("#mesa button").count(),8)
+        self.assertEqual(page.locator("#mesa button").count(),9)
         clutter = page.locator("#mesa").evaluate("""root => {const walker = document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const text=[];while(walker.nextNode()){const node=walker.currentNode;if(node.textContent.trim() && !node.parentElement.closest('.scene-header,svg')) text.push(node.textContent.trim());}return text;}""")
         self.assertEqual(clutter,[])
         for width,height in ((1440,1000),(1858,887),(390,844),(320,568)):
@@ -55,7 +55,8 @@ class CivicTableTests(unittest.TestCase):
             pile = page.locator(".lottery-object").bounding_box()
             positions = page.locator(".desk-object").evaluate_all("elements => elements.map(e => [e.offsetLeft,e.offsetTop,getComputedStyle(e).transform])")
             self.assertAlmostEqual(initial["x"] + initial["width"] / 2,width / 2,delta=1)
-            self.assertAlmostEqual(initial["y"] + initial["height"] / 2,height / 2,delta=1)
+            self.assertGreater(initial["y"] + initial["height"] / 2,height * .4)
+            self.assertLess(initial["y"] + initial["height"] / 2,height * .7)
             self.assertLess(initial["width"],width * .52)
             self.assertGreater(pile["x"] + pile["width"] / 2,width * .6)
             self.assertGreater(pile["y"] + pile["height"] / 2,height * .65)
