@@ -8,7 +8,8 @@ Este archivo guía a Codex, Antigravity y otros agentes que trabajen en `Proyect
 | --- | --- |
 | `index.html` | Entrada pública del sitio. Se genera; no se edita a mano. |
 | `web/index.template.html`, `web/scene.css`, `web/scene.js` | Plantilla, escena de la mesa e interacciones de sus objetos. |
-| `web/styles.css`, `web/app.js`, `web/data-engine.js`, `web/game-content.js` | Mapa ampliado, cálculos y contenidos de los juegos. |
+| `web/explorer.html`, `web/explorer.css`, `web/explorer.js` | Mapa estatal, filtros, historias y tabla comparativa. |
+| `web/styles.css`, `web/data-engine.js`, `web/game-content.js` | Estilos base, cálculos compartidos y contenidos de los juegos. |
 | `assets/imgs/` | Fondo, cartas de lotería y cubierta del cuaderno. |
 | `assets/modelos-3d/{balero,dados,pirinola}/` | Scripts WebGL, modelos `.glb`, texturas y visores de prueba. El sitio carga los tres scripts de forma diferida. |
 | `assets/mapas/` | Dos SVG de origen y `vinculacion_edocve.json`, que relaciona las piezas geográficas con las 32 entidades. |
@@ -34,11 +35,11 @@ Los CSV crudos de `Datos/` no forman parte del sitio ni están garantizados en e
 
 La escena es una mesa ilustrada que se acerca con el scroll hasta un límite. En ella están el mapa escolar, cuatro cartas de lotería, el cuaderno, el balero, la pirinola y los dados. Cada objeto se abre en un diálogo y vuelve a la mesa. Conserva el diseño, las animaciones, la proporción de los objetos y la separación entre ellos en móvil y escritorio salvo que la tarea pida cambiarlos.
 
-El mapa ampliado ofrece filtros por elección, sexo registrado, tipo de sección, edad y entidad. Sus cuatro modos son participación, caída tras el primer voto, brecha presidencial frente a intermedia y brecha de género e inclusión. Mantiene un panel estatal, curvas, evolución, territorio, modalidades especiales, detalle municipal y metodología. Las 32 claves `EDOCVE` deben seguir mapeadas una a una; las 84 piezas SVG incluyen islas. El contorno seleccionado debe dibujarse completo sobre los estados vecinos.
+El mapa ampliado presenta historias en pestañas a la izquierda, un mapa estatal y una tabla comparativa al centro, y filtros a la derecha. Los filtros permiten elegir rangos de grupos de edad y varios sexos, zonas y años. Ningún estado está seleccionado al abrir; el usuario puede elegir varios, seleccionar los 32 o restablecer el mapa. El mapa colorea la participación ordinaria según el perfil elegido. La tabla compara los estados y, cuando corresponde, desglosa los sexos y las zonas elegidos. El detalle municipal ya no se publica en esta vista; el cubo sigue disponible en `output/` para análisis futuros. Las 32 claves `EDOCVE` deben seguir mapeadas una a una; las 84 piezas SVG incluyen islas. El contorno seleccionado debe dibujarse completo sobre los estados vecinos.
 
 La vinculación geográfica tiene pruebas y una huella del SVG de origen. Si una tarea requiere cambiar el mapa o `vinculacion_edocve.json`, verifica otra vez las 32 claves, las 84 piezas y el contorno antes de regenerar el sitio.
 
-Las cartas abren cuatro historias con anverso y reverso. El balero tiene ocho preguntas con animaciones de acierto y fallo. La pirinola tiene ocho mitos, ocho realidades y ocho preguntas distintas de las del balero. Los dados tienen una interacción 3D para lanzarlos; no muestran todavía una cápsula electoral de estado y año. El cuaderno contiene la guía existente. Atlas, credencial y cartones con frijoles son ideas futuras: no los describas como funciones ya publicadas.
+Las cartas abren cuatro historias con anverso y reverso. El balero conserva ocho preguntas con animaciones de acierto y fallo. La pirinola tiene seis caras de dificultad, dos por nivel, y ocho preguntas por nivel distintas de las del balero. Los dos dados muestran MITO o VERDAD y presentan dos historias distintas en cada tirada. El cuaderno contiene la guía existente. Atlas, credencial y cartones con frijoles son ideas futuras: no los describas como funciones ya publicadas.
 
 En `assets/imgs/loteria/`, las cartas activas son `18-el-primer-voto.jpg`, `22-la-intermedia.jpg`, `61-la-votante.jpg`, `24-la-inclusion.jpg` y `reverso.jpg`. Otros archivos de esa carpeta pueden ser recursos para trabajo posterior. Los `.glb` y las texturas de `assets/modelos-3d/` son recursos fuente; el build actual publica los tres scripts WebGL que usa el sitio.
 

@@ -15,22 +15,21 @@
   const TAU = Math.PI * 2;
   const DEG = Math.PI / 180;
 
-  // Las 6 caras planas alternando exactamente MITO, REALIDAD y PREGUNTA alrededor del eje Y
   const FACES = [
     {
       index: 0,
       angleDeg: 0,
-      word: "MITO",
-      fill: "#C8142B",
-      highlight: "#EE334B",
-      deep: "#8E0A1B",
+      word: "FÁCIL",
+      fill: "#0A8750",
+      highlight: "#20B473",
+      deep: "#065834",
       cream: "#FFF6E0",
-      ink: "#22080C"
+      ink: "#062115"
     },
     {
       index: 1,
       angleDeg: 60,
-      word: "REALIDAD",
+      word: "MEDIO",
       fill: "#104CB4",
       highlight: "#2E75EC",
       deep: "#093078",
@@ -40,17 +39,7 @@
     {
       index: 2,
       angleDeg: 120,
-      word: "PREGUNTA",
-      fill: "#0A8750",
-      highlight: "#20B473",
-      deep: "#065834",
-      cream: "#FFF6E0",
-      ink: "#062115"
-    },
-    {
-      index: 3,
-      angleDeg: 180,
-      word: "MITO",
+      word: "DIFÍCIL",
       fill: "#C8142B",
       highlight: "#EE334B",
       deep: "#8E0A1B",
@@ -58,9 +47,19 @@
       ink: "#22080C"
     },
     {
+      index: 3,
+      angleDeg: 180,
+      word: "FÁCIL",
+      fill: "#0A8750",
+      highlight: "#20B473",
+      deep: "#065834",
+      cream: "#FFF6E0",
+      ink: "#062115"
+    },
+    {
       index: 4,
       angleDeg: 240,
-      word: "REALIDAD",
+      word: "MEDIO",
       fill: "#104CB4",
       highlight: "#2E75EC",
       deep: "#093078",
@@ -70,12 +69,12 @@
     {
       index: 5,
       angleDeg: 300,
-      word: "PREGUNTA",
-      fill: "#0A8750",
-      highlight: "#20B473",
-      deep: "#065834",
+      word: "DIFÍCIL",
+      fill: "#C8142B",
+      highlight: "#EE334B",
+      deep: "#8E0A1B",
       cream: "#FFF6E0",
-      ink: "#062115"
+      ink: "#22080C"
     }
   ];
 
@@ -318,6 +317,53 @@
         [22, 44], [22, 100]
       ]],
       holes: []
+    },
+    F: {
+      w: 58,
+      outers: [[
+        [0, 0], [58, 0], [56, 20], [22, 20], [22, 42],
+        [49, 42], [49, 61], [22, 61], [22, 100], [0, 100]
+      ]],
+      holes: []
+    },
+    C: {
+      w: 68,
+      outers: [[
+        [15, 0], [56, 0], [68, 13], [68, 33], [46, 33],
+        [46, 19], [23, 19], [22, 26], [22, 74], [23, 81],
+        [46, 81], [46, 67], [68, 67], [68, 87], [56, 100],
+        [15, 100], [0, 85], [0, 15]
+      ]],
+      holes: []
+    },
+    "Á": {
+      w: 74,
+      outers: [
+        [
+          [22, 0], [52, 0], [74, 100], [50, 100],
+          [46, 77], [28, 77], [24, 100], [0, 100]
+        ],
+        [
+          [31, -6], [42, -21], [55, -21], [41, -6]
+        ]
+      ],
+      holes: [[
+        [37, 19], [44, 58], [30, 58]
+      ]]
+    },
+    "Í": {
+      w: 36,
+      outers: [
+        [
+          [0, 0], [36, 0], [36, 18], [29, 18], [29, 82],
+          [36, 82], [36, 100], [0, 100], [0, 82], [7, 82],
+          [7, 18], [0, 18]
+        ],
+        [
+          [11, -6], [22, -21], [35, -21], [21, -6]
+        ]
+      ],
+      holes: []
     }
   };
 
@@ -409,7 +455,9 @@
     ctx.stroke();
 
     // 4. Relleno principal hand-painted con degradado cálido
-    const grad = ctx.createLinearGradient(cx, startY - archAmp, cx, startY + targetHeight);
+    const hasAccent = /[ÁÉÍÓÚ]/.test(word);
+    const accentExtra = hasAccent ? 22 * sy : 0;
+    const grad = ctx.createLinearGradient(cx, startY - archAmp - accentExtra, cx, startY + targetHeight);
     grad.addColorStop(0.0, face.highlight);
     grad.addColorStop(0.48, face.fill);
     grad.addColorStop(1.0, face.deep);
@@ -426,7 +474,7 @@
     ctx.globalAlpha = 0.24;
     ctx.strokeStyle = face.highlight;
     for (let i = 0; i < 16; i++) {
-      const by = startY - archAmp + rng() * (targetHeight * 0.50);
+      const by = startY - archAmp - accentExtra * 0.5 + rng() * (targetHeight * 0.50 + accentExtra * 0.5);
       ctx.lineWidth = 2.0 + rng() * 3.5;
       ctx.beginPath();
       ctx.moveTo(startX - 8, by + (rng() - 0.5) * 4);
@@ -436,7 +484,7 @@
 
     ctx.globalAlpha = 0.34;
     ctx.fillStyle = "#FFF9EC";
-    ctx.fillRect(startX - 6, startY - archAmp - 2, maxWidth + 12, targetHeight * 0.10);
+    ctx.fillRect(startX - 6, startY - archAmp - accentExtra - 2, maxWidth + 12, targetHeight * 0.10 + accentExtra);
     ctx.restore();
 
     // 6. Trazo fino de tinta negra en el filo de cada letra para nitidez cartoon
@@ -447,7 +495,7 @@
 
     // 7. Fileteado superior e inferior tradicional
     const barHalf = maxWidth * 0.38;
-    drawRotuloOrnament(ctx, cx, startY - archAmp - 26, barHalf, face.fill, face.ink, face.cream);
+    drawRotuloOrnament(ctx, cx, startY - archAmp - (hasAccent ? 54 : 26), barHalf, face.fill, face.ink, face.cream);
     drawRotuloOrnament(ctx, cx, startY + targetHeight + 30, barHalf, face.fill, face.ink, face.cream);
   }
 
@@ -775,10 +823,10 @@
 
     // Rótulo central grande, grueso y sumamente legible centrado en la cara plana
     const yMidFlat = 0.5 * (topArchPts[0][1] + botArchPts[0][1]);
-    const isShortWord = face.word.length <= 4;
-    const wordMaxW = isShortWord ? innerW * 0.78 : innerW * 0.84;
-    const wordH = isShortWord ? innerH * 0.275 : innerH * 0.265;
-    drawRotuloWord(ctx, face, cx, yMidFlat, wordMaxW, wordH);
+    const isShortWord = face.word.length <= 5;
+    const wordMaxW = isShortWord ? innerW * 0.80 : innerW * 0.85;
+    const wordH = isShortWord ? innerH * 0.270 : innerH * 0.258;
+    drawRotuloWord(ctx, face, cx, yMidFlat + 6, wordMaxW, wordH);
   }
 
   function paintLatheBand(ctx, x, w, bandY0, bandY1, baseColor, hiColor, shadowColor, seed, wearAmount) {
@@ -1968,6 +2016,7 @@
 
     function onPointerDown(e) {
       state.dragging = true;
+      state.dragDistance = 0;
       state.spinningToTarget = false;
       state.velY = 0;
       state.lastPointerX = e.clientX;
@@ -1981,6 +2030,7 @@
       const now = performance.now();
       const dx = e.clientX - state.lastPointerX;
       const dy = e.clientY - state.lastPointerY;
+      state.dragDistance += Math.hypot(dx, dy);
       const dt = Math.max(0.004, (now - state.lastMoveTime) / 1000);
 
       const deltaY = dx * 0.011;
@@ -1999,6 +2049,7 @@
       if (canvas.releasePointerCapture) {
         try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
       }
+      if (state.dragDistance >= 28 && typeof opts.onDragSpin === "function") opts.onDragSpin();
     }
 
     canvas.addEventListener("pointerdown", onPointerDown);
@@ -2007,13 +2058,17 @@
 
     state.rafId = requestAnimationFrame(render);
 
+    function normalizeFaceKey(value) {
+      return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    }
+
     function spin(targetWordOrIndex, instant = false) {
       let chosenIndex;
       if (typeof targetWordOrIndex === "number") {
         chosenIndex = ((targetWordOrIndex % 6) + 6) % 6;
       } else if (typeof targetWordOrIndex === "string") {
-        const upper = targetWordOrIndex.toUpperCase();
-        const matches = FACES.filter(f => f.word === upper);
+        const key = normalizeFaceKey(targetWordOrIndex);
+        const matches = FACES.filter(f => normalizeFaceKey(f.word) === key);
         chosenIndex = matches.length
           ? matches[Math.floor(Math.random() * matches.length)].index
           : Math.floor(Math.random() * 6);
@@ -2029,11 +2084,29 @@
       const extraTurns = (4 + Math.floor(Math.random() * 3)) * TAU;
       state.spinStartAngle = state.rotY;
       state.spinTargetAngle = state.rotY + extraTurns + delta;
-      state.spinStartTime = performance.now();
-      state.spinDuration = instant ? 1 : 2400 + Math.random() * 500;
-      state.spinningToTarget = true;
       state.targetFace = FACES[chosenIndex];
       state.velY = 0;
+
+      if (instant) {
+        state.rotY = state.spinTargetAngle;
+        state.rollZ = 0;
+        state.spinningToTarget = false;
+        const activeIdx = currentFrontFaceIndex();
+        if (activeIdx !== state.lastReportedFace) {
+          state.lastReportedFace = activeIdx;
+          if (typeof opts.onFaceChange === "function") {
+            opts.onFaceChange(FACES[activeIdx]);
+          }
+        }
+        if (typeof opts.onSettle === "function" && state.targetFace) {
+          opts.onSettle(state.targetFace);
+        }
+        return state.targetFace;
+      }
+
+      state.spinStartTime = performance.now();
+      state.spinDuration = 2400 + Math.random() * 500;
+      state.spinningToTarget = true;
       return state.targetFace;
     }
 

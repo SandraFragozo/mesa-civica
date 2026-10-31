@@ -82,7 +82,8 @@ test("nonbinary historical absence is not a zero participation rate", () => {
 });
 
 test("offline deliverable contains all data and no external runtime assets", () => {
-  assert.ok(page.includes('id="municipal-data"'));
+  assert.ok(page.includes('id="simple-comparison-body"'));
+  assert.ok(!page.includes('id="municipal-data"'));
   assert.ok(page.includes("data:font/ttf;base64,"));
   assert.equal((page.match(/data-edocve="\d+"/g) || []).length, 32);
   assert.ok(!/<script[^>]+src=/.test(page));

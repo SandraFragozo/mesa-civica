@@ -78,11 +78,16 @@ def main():
     substitutions = {
         "@@CSS@@": (BASE / "web" / "styles.css").read_text(encoding="utf-8"),
         "@@SCENE_CSS@@": (BASE / "web" / "scene.css").read_text(encoding="utf-8"),
+        "@@EXPLORER_CSS@@": (BASE / "web" / "explorer.css").read_text(encoding="utf-8"),
+        "@@LOTERIA_CSS@@": (BASE / "web" / "loteria.css").read_text(encoding="utf-8"),
+        "@@EXPLORER@@": (BASE / "web" / "explorer.html").read_text(encoding="utf-8"),
         "@@SCENE_APP@@": (BASE / "web" / "scene.js").read_text(encoding="utf-8"),
         "@@PREVIEW_MAP@@": school_preview(),
         "@@ENGINE@@": (BASE / "web" / "data-engine.js").read_text(encoding="utf-8"),
         "@@GAME_CONTENT@@": (BASE / "web" / "game-content.js").read_text(encoding="utf-8"),
-        "@@APP@@": (BASE / "web" / "app.js").read_text(encoding="utf-8"),
+        "@@LOTERIA_ENGINE@@": (BASE / "web" / "loteria.js").read_text(encoding="utf-8"),
+        "@@LOTERIA_UI@@": (BASE / "web" / "loteria-ui.js").read_text(encoding="utf-8"),
+        "@@APP@@": (BASE / "web" / "explorer.js").read_text(encoding="utf-8"),
         "@@MAP@@": interactive_svg(),
         "@@DATA@@": json_script(data),
         "@@MUNICIPAL@@": json_script(municipal),
@@ -94,7 +99,7 @@ def main():
         template = template.replace(token, value)
     destination = BASE / "index.html"
     destination.parent.mkdir(parents=True, exist_ok=True)
-    images = [BASE / "assets/imgs/backgrounds/bg-mesa-dibujo.png", *[BASE / "assets/imgs/loteria" / filename for filename in ["18-el-primer-voto.jpg", "22-la-intermedia.jpg", "61-la-votante.jpg", "24-la-inclusion.jpg", "reverso.jpg"]]]
+    images = [BASE / "assets/imgs/backgrounds/bg-mesa-dibujo.png", *[BASE / "assets/imgs/loteria" / filename for filename in ["01-la-credencial.jpg", "02-la-urna.jpg", "03-el-casillero.jpg", "04-la-lista.jpg", "06-el-calendario.jpg", "08-el-voto.jpg", "11-el-nulo.jpg", "17-la-bandera.jpg", "18-el-primer-voto.jpg", "20-la-cuesta-joven.jpg", "22-la-intermedia.jpg", "24-la-inclusion.jpg", "32-los-32.jpg", "33-las-tres-zonas.jpg", "40-el-repunte.jpg", "50-la-lupa.jpg", "58-la-prision-preventiva.jpg", "61-la-votante.jpg", "reverso.jpg", "frijol.png"]]]
     if any(not source.is_file() for source in images):
         raise ValueError("Faltan imágenes necesarias en assets/imgs")
     temporary = destination.with_suffix(".html.tmp")

@@ -40,10 +40,18 @@
   let notebookTimer = 0;
   const gameContent = CivicGames.createContent(JSON.parse($("ccpc-data").textContent));
   const baleroDeck = CivicGames.createDeck(gameContent.balero);
+  const dadosRoller = CivicGames.createDadosRoller(gameContent.dados);
   const pirinolaDecks = Object.fromEntries(Object.entries(gameContent.pirinola).map(([type, items]) => [type, CivicGames.createDeck(items)]));
   let baleroQuestion = null;
   let baleroAnswered = false;
   let pirinolaQuestion = null;
+
+  function resolveDifficultyKey(raw) {
+    const clean = String(raw || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+    if (clean === "FACIL") return "FÁCIL";
+    if (clean === "DIFICIL") return "DIFÍCIL";
+    return pirinolaDecks[raw] ? raw : "MEDIO";
+  }
 
   function renderAnswers(container, question, attribute) {
     const deck = CivicGames.createDeck(question.options);
@@ -58,20 +66,75 @@
     }));
   }
 
-  function showPirinolaContent(type) {
-    const item = pirinolaDecks[type].next();
-    pirinolaQuestion = type === "PREGUNTA" ? item : null;
+  function showPirinolaContent(rawDifficulty) {
+    const difficulty = resolveDifficultyKey(rawDifficulty);
+    const item = pirinolaDecks[difficulty].next();
+    pirinolaQuestion = item;
     $("pirinola-result").dataset.item = item.id;
-    $("pirinola-result-type").textContent = type;
-    $("pirinola-result-title").textContent = item.prompt || item.title;
-    $("pirinola-result-text").textContent = pirinolaQuestion ? "Elige una respuesta para contrastarla con los datos." : `${type === "MITO" ? "Lo que muestran los datos: " : ""}${item.explanation}`;
+    $("pirinola-result").dataset.difficulty = difficulty;
+    $("pirinola-result-type").textContent = difficulty;
+    $("pirinola-result-title").textContent = item.prompt;
+    $("pirinola-result-text").textContent = "Elige una respuesta para contrastarla con los datos.";
     $("pirinola-scope").textContent = `${item.scope}. ${item.source}`;
-    $("pirinola-question").hidden = !pirinolaQuestion;
+    $("pirinola-question").hidden = false;
     $("pirinola-question").disabled = false;
     $("pirinola-feedback").hidden = true;
-    if (pirinolaQuestion) renderAnswers($("pirinola-answers"), item, "pirinolaAnswer");
+    renderAnswers($("pirinola-answers"), item, "pirinolaAnswer");
     $("pirinola-result").hidden = false;
+    $("pirinola-spin").textContent = "Volver a girar";
     $("pirinola-spin").disabled = false;
+  }
+
+  function showDadosStories(result) {
+    const friendly = value => String(value)
+      .replace(/\bLN\s*<\s*100\b/g, "menos de 100 personas registradas")
+      .replace(/\bLN\b/g, "lista de personas registradas")
+      .replace(/\bSV\b/g, "personas con marca de voto")
+      .replace(/\bNV\b/g, "personas sin marca de voto")
+      .replace(/\bNS\b/g, "registros sin dato de participación")
+      .replace(/\bpp\b/g, "puntos porcentuales")
+      .replace(/\bCCPC\b/g, "conteos del INE")
+      .replace(/\bSEXO\b/g, "sexo")
+      .replace(/\bdenominador\b/gi, "total usado como base")
+      .replace(/\bcortes transversales\b/gi, "elecciones observadas por separado")
+      .replace(/\bbrecha\b/gi, "diferencia")
+      .replace(/\btasas\b/gi, "porcentajes de participación")
+      .replace(/\btasa\b/gi, "porcentaje de participación")
+      .replace(/universo ordinario/gi, "datos de las elecciones habituales")
+      .replace(/registros persona-elección/gi, "registros de cada persona en cada elección");
+    const wordA = result.wordA || (Number(result.faceA) % 2 === 1 ? "MITO" : "VERDAD");
+    const wordB = result.wordB || (Number(result.faceB) % 2 === 1 ? "MITO" : "VERDAD");
+    const stories = dadosRoller.draw(wordA, wordB);
+    $("dados-result").dataset.combo = `${wordA}+${wordB}`;
+    $("dados-result").dataset.wordA = wordA;
+    $("dados-result").dataset.wordB = wordB;
+    $("dados-result").dataset.items = `${stories[0].id},${stories[1].id}`;
+    $("dados-summary").textContent = `Dado 1: ${wordA} · Dado 2: ${wordB}`;
+    $("dados-stories").replaceChildren(...stories.map((story, index) => {
+      const dieWord = index === 0 ? wordA : wordB;
+      const card = document.createElement("article");
+      card.className = "dados-story";
+      card.dataset.die = String(index + 1);
+      card.dataset.type = dieWord;
+      card.dataset.item = story.id;
+      const tag = document.createElement("span");
+      tag.className = "dados-story-tag";
+      tag.textContent = `Dado ${index + 1} · ${dieWord}`;
+      const title = document.createElement("strong");
+      title.className = "dados-story-title";
+      title.textContent = friendly(story.title);
+      const text = document.createElement("p");
+      text.className = "dados-story-text";
+      text.textContent = dieWord === "MITO" ? `Lo que muestran los datos: ${friendly(story.explanation)}` : friendly(story.explanation);
+      const meta = document.createElement("p");
+      meta.className = "dados-story-meta";
+      meta.textContent = `${friendly(story.scope)}. Fuente: INE · conteos de participación ciudadana, 2009–2024.`;
+      card.append(tag, title, text, meta);
+      return card;
+    }));
+    $("dados-result").hidden = false;
+    $("dados-roll").textContent = "Volver a lanzar";
+    $("dados-roll").disabled = false;
   }
 
   function loadPirinola() {
@@ -101,7 +164,10 @@
         tiltDeg: 13,
         resting: !(dialog.open && dialog.dataset.object === "pirinola"),
         onSettle(face) {
-          if (dialog.open && dialog.dataset.object === "pirinola") showPirinolaContent(face.word);
+          if (dialog.open && dialog.dataset.object === "pirinola" && !closing) showPirinolaContent(face.word);
+        },
+        onDragSpin() {
+          if (dialog.open && dialog.dataset.object === "pirinola" && !closing && !$("pirinola-spin").disabled) $("pirinola-spin").click();
         }
       });
       return pirinolaViewer;
@@ -151,10 +217,7 @@
         faceB: 6,
         onRollResult(result) {
           if (!dialog.open || dialog.dataset.object !== "dados" || closing) return;
-          $("dados-result").textContent = `Salieron ${result.faceA} y ${result.faceB}. Total: ${result.sum}.`;
-          $("dados-result").hidden = false;
-          $("dados-roll").textContent = "Volver a lanzar";
-          $("dados-roll").disabled = false;
+          showDadosStories(result);
         }
       });
       $("dados-loading").hidden = true;
@@ -328,6 +391,7 @@
       if (pirinolaViewer) pirinolaViewer.setResting(true);
     }
     dialog.close();
+    if (dialog.dataset.object === "loteria") document.dispatchEvent(new CustomEvent("civic:loteria-close"));
     document.documentElement.style.overflow = scrollOverflow;
     document.body.classList.remove("object-returning");
     source.style.visibility = "";
@@ -395,12 +459,14 @@
     surface.classList.toggle("is-balero", kind === "balero");
     surface.classList.toggle("is-dados", kind === "dados");
     surface.classList.toggle("is-notebook", kind === "notebook");
+    surface.classList.toggle("is-loteria", kind === "loteria");
     $("map-focus").hidden = kind !== "map";
     $("card-focus").hidden = kind !== "card";
     $("pirinola-focus").hidden = kind !== "pirinola";
     $("balero-focus").hidden = kind !== "balero";
     $("dados-focus").hidden = kind !== "dados";
     $("notebook-focus").hidden = kind !== "notebook";
+    $("loteria-focus").hidden = kind !== "loteria";
     if (kind === "dados") {
       $("dados-canvas-mount").append($("dados-canvas"));
       $("dados-canvas").tabIndex = 0;
@@ -428,14 +494,15 @@
       $("pirinola-canvas").tabIndex = 0;
       $("pirinola-canvas").removeAttribute("aria-hidden");
       $("pirinola-canvas").setAttribute("aria-label", "Pirinola 3D. Usa flecha izquierda o derecha para rotarla.");
+      pirinolaQuestion = null;
       $("pirinola-result").hidden = true;
+      $("pirinola-spin").textContent = "Girar pirinola";
       $("pirinola-spin").disabled = false;
       if (pirinolaViewer) pirinolaViewer.setResting(false);
     }
     dialog.dataset.object = kind;
     dialog.dataset.animating = String(!reduced.matches);
-    if (kind === "map") $("map-controls").open = !mobile.matches;
-    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : "notebook-title");
+    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : kind === "loteria" ? "loteria-title" : "notebook-title");
     if (kind === "card") showCard(key);
     scrollOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
@@ -451,6 +518,7 @@
     }
     syncDados();
     if (kind === "map") document.dispatchEvent(new CustomEvent("civic:map-open"));
+    if (kind === "loteria") document.dispatchEvent(new CustomEvent("civic:loteria-open"));
     if (kind === "pirinola") preparePirinola();
     if (kind === "balero") { syncBalero(); prepareBalero(); }
   }
@@ -508,16 +576,25 @@
     const success = button.dataset.pirinolaAnswer === pirinolaQuestion.correct;
     $("pirinola-question").disabled = true;
     button.setAttribute("aria-pressed", "true");
-    const correct = pirinolaQuestion.options.find(option => option.id === pirinolaQuestion.correct).text;
-    $("pirinola-feedback").textContent = `${success ? "¡Correcto!" : `Respuesta: ${correct}.`} ${pirinolaQuestion.explanation}`;
+    $("pirinola-answers").querySelectorAll("button").forEach(option => {
+      option.dataset.result = option.dataset.pirinolaAnswer === pirinolaQuestion.correct ? "correct" : "incorrect";
+    });
+    $("pirinola-feedback").textContent = pirinolaQuestion.explanation;
     $("pirinola-feedback").dataset.success = String(success);
     $("pirinola-feedback").hidden = false;
   }, { signal });
   $("pirinola-spin").addEventListener("click", () => {
-    if (!pirinolaViewer) return;
+    if ($("pirinola-spin").disabled || closing) return;
     $("pirinola-result").hidden = true;
     $("pirinola-spin").disabled = true;
-    pirinolaViewer.spin(undefined, reduced.matches);
+    if (pirinolaViewer) {
+      pirinolaViewer.spin(undefined, reduced.matches);
+      return;
+    }
+    preparePirinola().then(viewer => {
+      if (!viewer || !dialog.open || dialog.dataset.object !== "pirinola" || closing) return;
+      viewer.spin(undefined, reduced.matches);
+    });
   }, { signal });
   $("pirinola-canvas").addEventListener("keydown", event => {
     if (!pirinolaViewer || !["ArrowLeft", "ArrowRight"].includes(event.key)) return;
@@ -525,6 +602,7 @@
     pirinolaViewer.rotateBy(event.key === "ArrowLeft" ? -60 : 60);
   }, { signal });
   $("map-opener").addEventListener("click", () => openObject("map", $("map-opener")), { signal });
+  $("loteria-opener").addEventListener("click", () => openObject("loteria", $("loteria-opener")), { signal });
   document.querySelectorAll("[data-card]").forEach(button => button.addEventListener("click", () => openObject("card", button, button.dataset.card), { signal }));
   $("close-object").addEventListener("click", () => closeObject(), { signal });
   dialog.addEventListener("cancel", event => { event.preventDefault(); closeObject(); }, { signal });
@@ -551,7 +629,6 @@
   document.addEventListener("civic:card-facts", event => { facts = event.detail; if (dialog.open && dialog.dataset.object === "card") showCard(currentCard); }, { signal });
   window.addEventListener("scroll", scheduleDesk, { passive: true, signal });
   window.addEventListener("resize", scheduleDesk, { passive: true, signal });
-  mobile.addEventListener("change", () => { if (!mobile.matches) $("map-controls").open = true; }, { signal });
   reduced.addEventListener("change", () => {
     if (motion) {
       if (closing) finishClose();

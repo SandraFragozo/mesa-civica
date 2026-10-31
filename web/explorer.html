@@ -1,0 +1,39 @@
+<div class="simple-explorer">
+  <aside class="simple-filters" aria-labelledby="simple-filters-title"><h2 id="simple-filters-title">Elige qué comparar</h2><p>Los filtros cambian el mapa, la tabla y las historias.</p>
+    <fieldset class="simple-filter-group"><legend>Edades</legend><div class="simple-range-labels"><span id="simple-min-label">18–19</span><span id="simple-max-label">70+</span></div><div class="simple-range"><input id="simple-age-min" type="range" min="0" max="7" value="0" aria-label="Edad mínima"><input id="simple-age-max" type="range" min="0" max="7" value="7" aria-label="Edad máxima"></div><p id="simple-age-description">De 18–19 a 70+ años</p></fieldset>
+    <fieldset class="simple-filter-group"><legend>Sexo registrado</legend><div class="simple-checks"><label><input type="checkbox" name="simple-sex" value="0" checked> Hombres</label><label><input type="checkbox" name="simple-sex" value="1" checked> Mujeres</label><label><input type="checkbox" name="simple-sex" value="2" checked> No binario <small>Solo 2024</small></label></div></fieldset>
+    <fieldset class="simple-filter-group"><legend>Zona</legend><div class="simple-checks"><label><input type="checkbox" name="simple-zone" value="0" checked> Urbana</label><label><input type="checkbox" name="simple-zone" value="1" checked> Mixta</label><label><input type="checkbox" name="simple-zone" value="2" checked> Rural</label></div></fieldset>
+    <fieldset class="simple-filter-group"><legend>Año de elección</legend><div class="simple-checks"><label><input type="checkbox" name="simple-year" value="2009"> 2009 <small>Intermedia</small></label><label><input type="checkbox" name="simple-year" value="2012"> 2012 <small>Presidencial</small></label><label><input type="checkbox" name="simple-year" value="2015"> 2015 <small>Intermedia</small></label><label><input type="checkbox" name="simple-year" value="2018"> 2018 <small>Presidencial</small></label><label><input type="checkbox" name="simple-year" value="2021"> 2021 <small>Intermedia</small></label><label><input type="checkbox" name="simple-year" value="2024" checked> 2024 <small>Presidencial</small></label></div></fieldset>
+    <p class="simple-filter-note" id="simple-filter-note"></p>
+    <section class="simple-origin">      <details><summary>Origen y límites de los datos</summary><p>INE, Conteos Censales de Participación Ciudadana 2009–2024. Las elecciones son fotografías de años distintos, no el seguimiento de las mismas personas. Los archivos de Voto Anticipado y Prisión Preventiva se muestran por separado, como conteos y sin porcentajes de participación.</p></details></section>
+  </aside>
+  <section class="simple-main" aria-labelledby="simple-map-title">
+    <div class="simple-map-header"><div><p class="simple-eyebrow">Mapa de México · 32 estados</p><h2 id="simple-map-title">¿Dónde se participa más?</h2><p>Elige un estado para ver sus datos. Puedes elegir varios y compararlos.</p></div><div class="simple-map-actions"><button type="button" id="simple-select-all">Seleccionar todo</button><button type="button" id="simple-clear">Restablecer mapa</button></div></div>
+    <div class="simple-map-wrap"><div class="simple-map-svg">@@MAP@@</div><p id="simple-map-hint" class="simple-map-hint">Toca un estado para conocerlo</p></div>
+    <div class="simple-scale"><span>Menor participación</span><span aria-hidden="true" class="simple-scale-bar"></span><span>Mayor participación</span></div>
+    <section class="simple-comparison" aria-labelledby="simple-comparison-title"><div class="simple-comparison-heading"><div><h3 id="simple-comparison-title">Compara lo que elegiste</h3><p id="simple-comparison-scope"></p></div><span id="simple-selection-count"></span></div><p class="simple-scroll-hint">Desliza la tabla para ver el porcentaje →</p><div class="simple-table-scroll" tabindex="0"><table><thead><tr><th scope="col">Lugar o grupo</th><th scope="col">Sí votó</th><th scope="col">Lista nominal</th><th scope="col">Participación</th></tr></thead><tbody id="simple-comparison-body"></tbody></table></div><p id="simple-table-note"></p></section>
+  </section>
+  <aside class="simple-info" aria-labelledby="simple-info-title">
+    <h2 id="simple-info-title">Historias de participación</h2>
+    <p class="simple-intro">Elige una historia y descubre qué muestran los datos.</p>
+    <div class="simple-tabs" role="tablist" aria-label="Historias del mapa">
+      <button id="simple-tab-participation" type="button" role="tab" data-story="participation" aria-selected="true" aria-controls="simple-story-panel" tabindex="0">Participación</button>
+      <button id="simple-tab-age" type="button" role="tab" data-story="age" aria-selected="false" aria-controls="simple-story-panel" tabindex="-1">Edad</button>
+      <button id="simple-tab-election" type="button" role="tab" data-story="election" aria-selected="false" aria-controls="simple-story-panel" tabindex="-1">Elecciones</button>
+      <button id="simple-tab-inclusion" type="button" role="tab" data-story="inclusion" aria-selected="false" aria-controls="simple-story-panel" tabindex="-1">Inclusión</button>
+    </div>
+    <section id="simple-story-panel" class="simple-story" role="tabpanel" aria-labelledby="simple-tab-participation" aria-live="polite">
+      <h3 id="simple-story-title"></h3>
+      <p id="simple-story-general"></p>
+      <div class="simple-story-fact" id="simple-story-fact"></div>
+      <p id="simple-story-dynamic"></p>
+    </section>
+    <section class="simple-glossary" aria-labelledby="simple-glossary-title">
+      <h3 id="simple-glossary-title">Cómo leer el mapa</h3>
+      <p><strong>Participación</strong> indica qué porcentaje de la lista nominal tiene una marca de voto. Un color más oscuro indica mayor participación bajo los filtros elegidos.</p>
+      <dl><div><dt>LN</dt><dd>Personas registradas en la lista nominal capturada.</dd></div><div><dt>SV</dt><dd>Registros con marca de que sí votó.</dd></div><div><dt>NV</dt><dd>Registros con marca de que no votó.</dd></div><div><dt>NS</dt><dd>No se especificó si votó. No se suma a “no votó”.</dd></div></dl>
+      <p>Los porcentajes se calculan después de sumar los registros. Si una base tiene menos de 100 registros, interpreta el porcentaje con cautela.</p>
+
+    </section>
+  </aside>
+</div><div id="tooltip" class="tooltip" role="tooltip" hidden></div>

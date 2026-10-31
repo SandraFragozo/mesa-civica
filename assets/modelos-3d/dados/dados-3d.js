@@ -2,7 +2,7 @@
  * Dados3D — Modelo 3D estilizado de un par de dados mexicanos clásicos de esquinas redondeadas
  * Estética de dibujo animado mexicano estilo "Las Leyendas", sombreado cel-shaded cálido 2D/3D,
  * contornos gruesos de tinta negra (inked toon shader), color blanco hueso / marfil cálido con
- * desgaste artesanal en bordes y puntos circulares (1 al 6) ligeramente hundidos en negro carbón.
+ * desgaste artesanal en bordes y seis caras rotuladas (3 MITO y 3 VERDAD) ligeramente hundidas.
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
@@ -52,27 +52,262 @@
     ink: "#140C08"
   };
 
-  // Coordenadas normalizadas en [-1, +1]^2 de los puntos (pips) para las 6 caras (1 a 6)
-  const PIP_OFFSET = 0.465;
-  const PIP_LAYOUTS = {
-    1: [[0, 0]],
-    2: [[-PIP_OFFSET, -PIP_OFFSET], [PIP_OFFSET, PIP_OFFSET]],
-    3: [[-PIP_OFFSET, -PIP_OFFSET], [0, 0], [PIP_OFFSET, PIP_OFFSET]],
-    4: [
-      [-PIP_OFFSET, -PIP_OFFSET], [PIP_OFFSET, -PIP_OFFSET],
-      [-PIP_OFFSET,  PIP_OFFSET], [PIP_OFFSET,  PIP_OFFSET]
-    ],
-    5: [
-      [-PIP_OFFSET, -PIP_OFFSET], [PIP_OFFSET, -PIP_OFFSET],
-      [0, 0],
-      [-PIP_OFFSET,  PIP_OFFSET], [PIP_OFFSET,  PIP_OFFSET]
-    ],
-    6: [
-      [-PIP_OFFSET, -PIP_OFFSET], [PIP_OFFSET, -PIP_OFFSET],
-      [-PIP_OFFSET,  0],          [PIP_OFFSET,  0],
-      [-PIP_OFFSET,  PIP_OFFSET], [PIP_OFFSET,  PIP_OFFSET]
-    ]
+  const FACES = [
+    { faceNum: 1, word: "MITO", fill: "#C4182E", highlight: "#EC384E", deep: "#880B1B", cream: "#FFF7E2", ink: "#20080B" },
+    { faceNum: 2, word: "VERDAD", fill: "#0B8550", highlight: "#22B273", deep: "#065633", cream: "#FFF7E2", ink: "#062014" },
+    { faceNum: 3, word: "MITO", fill: "#C4182E", highlight: "#EC384E", deep: "#880B1B", cream: "#FFF7E2", ink: "#20080B" },
+    { faceNum: 4, word: "VERDAD", fill: "#0B8550", highlight: "#22B273", deep: "#065633", cream: "#FFF7E2", ink: "#062014" },
+    { faceNum: 5, word: "MITO", fill: "#C4182E", highlight: "#EC384E", deep: "#880B1B", cream: "#FFF7E2", ink: "#20080B" },
+    { faceNum: 6, word: "VERDAD", fill: "#0B8550", highlight: "#22B273", deep: "#065633", cream: "#FFF7E2", ink: "#062014" }
+  ];
+
+  const ROTULO_GLYPHS = {
+    M: {
+      w: 88,
+      outers: [[
+        [0, 100], [0, 10], [4, 0], [24, 0], [44, 42],
+        [64, 0], [84, 0], [88, 10], [88, 100], [65, 100],
+        [65, 43], [49, 76], [39, 76], [23, 43], [23, 100]
+      ]],
+      holes: []
+    },
+    I: {
+      w: 36,
+      outers: [[
+        [0, 0], [36, 0], [36, 18], [29, 18], [29, 82],
+        [36, 82], [36, 100], [0, 100], [0, 82], [7, 82],
+        [7, 18], [0, 18]
+      ]],
+      holes: []
+    },
+    T: {
+      w: 68,
+      outers: [[
+        [0, 0], [68, 0], [66, 21], [46, 21], [46, 85],
+        [51, 89], [51, 100], [17, 100], [17, 89], [22, 85],
+        [22, 21], [2, 21]
+      ]],
+      holes: []
+    },
+    O: {
+      w: 72,
+      outers: [[
+        [15, 0], [57, 0], [72, 15], [72, 85],
+        [57, 100], [15, 100], [0, 85], [0, 15]
+      ]],
+      holes: [[
+        [23, 19], [49, 19], [50, 26], [50, 74],
+        [49, 81], [23, 81], [22, 74], [22, 26]
+      ]]
+    },
+    V: {
+      w: 74,
+      outers: [[
+        [0, 0], [24, 0], [37, 68], [50, 0],
+        [74, 0], [51, 100], [23, 100]
+      ]],
+      holes: []
+    },
+    E: {
+      w: 60,
+      outers: [[
+        [0, 0], [60, 0], [58, 20], [22, 20], [22, 40],
+        [51, 40], [51, 59], [22, 59], [22, 80], [60, 80],
+        [58, 100], [0, 100]
+      ]],
+      holes: []
+    },
+    R: {
+      w: 70,
+      outers: [[
+        [0, 100], [0, 0], [53, 0], [69, 14], [69, 43],
+        [54, 56], [71, 100], [46, 100], [33, 60], [22, 60], [22, 100]
+      ]],
+      holes: [[
+        [22, 18], [44, 18], [47, 23], [47, 37], [44, 42], [22, 42]
+      ]]
+    },
+    D: {
+      w: 70,
+      outers: [[
+        [0, 0], [50, 0], [70, 18], [70, 82], [50, 100], [0, 100]
+      ]],
+      holes: [[
+        [22, 19], [44, 19], [48, 26], [48, 74], [44, 81], [22, 81]
+      ]]
+    },
+    A: {
+      w: 74,
+      outers: [[
+        [22, 0], [52, 0], [74, 100], [50, 100],
+        [46, 77], [28, 77], [24, 100], [0, 100]
+      ]],
+      holes: [[
+        [37, 19], [44, 58], [30, 58]
+      ]]
+    }
   };
+
+  function traceGlyphPath(ctx, glyph, x0, y0, sx, sy, archAmp, wordCenterX, halfWordW) {
+    function mapPt(pt) {
+      const gx = x0 + pt[0] * sx;
+      const norm = halfWordW > 0 ? (gx - wordCenterX) / halfWordW : 0;
+      const archOffset = -archAmp * (1 - norm * norm);
+      const gy = y0 + pt[1] * sy + archOffset;
+      return [gx, gy];
+    }
+
+    for (let p = 0; p < glyph.outers.length; p++) {
+      const poly = glyph.outers[p];
+      const p0 = mapPt(poly[0]);
+      ctx.moveTo(p0[0], p0[1]);
+      for (let i = 1; i < poly.length; i++) {
+        const pi = mapPt(poly[i]);
+        ctx.lineTo(pi[0], pi[1]);
+      }
+      ctx.closePath();
+    }
+
+    for (let h = 0; h < glyph.holes.length; h++) {
+      const hole = glyph.holes[h];
+      const p0 = mapPt(hole[hole.length - 1]);
+      ctx.moveTo(p0[0], p0[1]);
+      for (let i = hole.length - 2; i >= 0; i--) {
+        const pi = mapPt(hole[i]);
+        ctx.lineTo(pi[0], pi[1]);
+      }
+      ctx.closePath();
+    }
+  }
+
+  function drawDieOrnament(ctx, cx, y, halfSpan, color, ink, cream) {
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 6.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - halfSpan, y + 2);
+    ctx.quadraticCurveTo(cx - halfSpan * 0.5, y - 3, cx - 18, y);
+    ctx.moveTo(cx + 18, y);
+    ctx.quadraticCurveTo(cx + halfSpan * 0.5, y - 3, cx + halfSpan, y + 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.moveTo(cx - halfSpan, y + 2);
+    ctx.quadraticCurveTo(cx - halfSpan * 0.5, y - 3, cx - 18, y);
+    ctx.moveTo(cx + 18, y);
+    ctx.quadraticCurveTo(cx + halfSpan * 0.5, y - 3, cx + halfSpan, y + 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, y - 8);
+    ctx.lineTo(cx + 10, y);
+    ctx.lineTo(cx, y + 8);
+    ctx.lineTo(cx - 10, y);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = ink;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, y, 2.2, 0, TAU);
+    ctx.fillStyle = cream;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDieWord(ctx, face, cx, cy, maxWidth, targetHeight) {
+    const word = face.word;
+    const isShort = word.length <= 4;
+    const tracking = isShort ? 8.5 : 6.8;
+    let totalUnits = 0;
+    for (let i = 0; i < word.length; i++) {
+      totalUnits += ROTULO_GLYPHS[word[i]].w + (i < word.length - 1 ? tracking : 0);
+    }
+
+    const sx = maxWidth / totalUnits;
+    const sy = targetHeight / 100;
+    const startX = cx - maxWidth * 0.5;
+    const startY = cy - targetHeight * 0.5;
+    const archAmp = targetHeight * 0.032;
+    const halfW = maxWidth * 0.5;
+
+    function buildWordPath(dx, dy) {
+      ctx.beginPath();
+      let cursor = startX + dx;
+      for (let i = 0; i < word.length; i++) {
+        const g = ROTULO_GLYPHS[word[i]];
+        traceGlyphPath(ctx, g, cursor, startY + dy, sx, sy, archAmp, cx + dx, halfW);
+        cursor += (g.w + tracking) * sx;
+      }
+    }
+
+    const extrudeSteps = isShort ? 7 : 6;
+    const stepX = isShort ? 1.5 : 1.15;
+    const stepY = isShort ? 1.85 : 1.45;
+    ctx.fillStyle = face.ink;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    for (let s = extrudeSteps; s >= 1; s--) {
+      buildWordPath(s * stepX, s * stepY);
+      ctx.fill("evenodd");
+      ctx.strokeStyle = face.ink;
+      ctx.lineWidth = isShort ? 6.0 : 4.4;
+      ctx.stroke();
+    }
+
+    buildWordPath(0, 0);
+    ctx.strokeStyle = PALETTE.ink;
+    ctx.lineWidth = isShort ? 7.0 : 5.2;
+    ctx.stroke();
+
+    buildWordPath(-1.2, -1.2);
+    ctx.strokeStyle = face.cream;
+    ctx.lineWidth = isShort ? 3.6 : 2.8;
+    ctx.stroke();
+
+    const grad = ctx.createLinearGradient(cx, startY - archAmp, cx, startY + targetHeight);
+    grad.addColorStop(0.0, face.highlight);
+    grad.addColorStop(0.48, face.fill);
+    grad.addColorStop(1.0, face.deep);
+    buildWordPath(0, 0);
+    ctx.fillStyle = grad;
+    ctx.fill("evenodd");
+
+    ctx.save();
+    buildWordPath(0, 0);
+    ctx.clip("evenodd");
+    const rng = mulberry32(face.faceNum * 613 + word.length * 131);
+    ctx.globalAlpha = 0.22;
+    ctx.strokeStyle = face.highlight;
+    for (let i = 0; i < 12; i++) {
+      const by = startY - archAmp + rng() * (targetHeight * 0.50);
+      ctx.lineWidth = 2.0 + rng() * 3.0;
+      ctx.beginPath();
+      ctx.moveTo(startX - 8, by);
+      ctx.quadraticCurveTo(cx, by - archAmp * 0.8, startX + maxWidth + 8, by);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.30;
+    ctx.fillStyle = "#FFF9EC";
+    ctx.fillRect(startX - 6, startY - archAmp - 2, maxWidth + 12, targetHeight * 0.11);
+    ctx.restore();
+
+    buildWordPath(0, 0);
+    ctx.strokeStyle = PALETTE.ink;
+    ctx.lineWidth = isShort ? 2.4 : 2.0;
+    ctx.stroke();
+
+    const barHalf = maxWidth * 0.42;
+    drawDieOrnament(ctx, cx, startY - archAmp - 24, barHalf, face.fill, face.ink, face.cream);
+    drawDieOrnament(ctx, cx, startY + targetHeight + 28, barHalf, face.fill, face.ink, face.cream);
+  }
 
   // ============================================================================
   // 1. ATLAS DE TEXTURAS HAND-PAINTED (2048 x 2048)
@@ -106,6 +341,7 @@
 
   function paintDieFaceCell(ctx, faceNumber) {
     const idx = faceNumber - 1;
+    const face = FACES[idx];
     const col = idx % 3;
     const row = Math.floor(idx / 3);
     const x0 = col * ATLAS_LAYOUT.cellW;
@@ -215,66 +451,37 @@
     ctx.lineWidth = 8.5;
     ctx.stroke();
 
-    // 5. Puntos circulares (del 1 al 6) ligeramente hundidos y pintados a mano en negro carbón profundo
-    const pips = PIP_LAYOUTS[faceNumber] || PIP_LAYOUTS[1];
-    // El punto central del 1 es tradicionalmente un poquito más grande y expresivo
-    const pipRadiusNorm = faceNumber === 1 ? 0.190 : 0.158;
-    const pipRadiusPx = pipRadiusNorm * (innerW * 0.5);
+    const plaqueW = fw * 0.90;
+    const plaqueH = fh * 0.68;
+    const plaqueX = cx - plaqueW * 0.5;
+    const plaqueY = cy - plaqueH * 0.5;
 
-    for (let p = 0; p < pips.length; p++) {
-      const [pu, pv] = pips[p];
-      const px = cx + pu * (innerW * 0.5);
-      const py = cy + pv * (innerH * 0.5);
+    drawRoundedRectPath(ctx, plaqueX - 3, plaqueY - 3, plaqueW + 2, plaqueH + 2, 34);
+    ctx.fillStyle = "#D4BA8E";
+    ctx.fill();
 
-      // a) Sombreado de la cuenca cóncava hundida en el marfil (sombra cálida arriba-izq, luz abajo-der)
-      ctx.beginPath();
-      ctx.arc(px - 2.6, py - 2.6, pipRadiusPx * 1.11, 0, TAU);
-      ctx.fillStyle = "#D4BA8E";
-      ctx.fill();
+    drawRoundedRectPath(ctx, plaqueX + 3, plaqueY + 3, plaqueW, plaqueH, 34);
+    ctx.fillStyle = "#FFFDF8";
+    ctx.fill();
 
-      ctx.beginPath();
-      ctx.arc(px + 2.8, py + 2.8, pipRadiusPx * 1.10, 0, TAU);
-      ctx.fillStyle = "#FFFDF7";
-      ctx.fill();
+    drawRoundedRectPath(ctx, plaqueX, plaqueY, plaqueW, plaqueH, 32);
+    ctx.fillStyle = "#FAF2DF";
+    ctx.fill();
+    ctx.lineWidth = 4.2;
+    ctx.strokeStyle = PALETTE.ink;
+    ctx.stroke();
 
-      // b) Base del punto pintado a mano en negro carbón profundo
-      const pipGrad = ctx.createLinearGradient(px - pipRadiusPx, py - pipRadiusPx, px + pipRadiusPx, py + pipRadiusPx);
-      pipGrad.addColorStop(0.0, "#0C0908");
-      pipGrad.addColorStop(0.58, PALETTE.charcoalCore);
-      pipGrad.addColorStop(1.0, PALETTE.charcoalMid);
+    drawRoundedRectPath(ctx, plaqueX + 9, plaqueY + 9, plaqueW - 18, plaqueH - 18, 25);
+    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = face.fill;
+    ctx.globalAlpha = 0.72;
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
 
-      ctx.beginPath();
-      ctx.arc(px, py, pipRadiusPx, 0, TAU);
-      ctx.fillStyle = pipGrad;
-      ctx.fill();
-
-      // c) Anillo de tinta negra profunda en el borde de la cuenca
-      ctx.lineWidth = 4.0;
-      ctx.strokeStyle = "#080504";
-      ctx.stroke();
-
-      // d) Media luna de reflejo cálido interno (como en las imágenes de referencia 2 y 3)
-      ctx.beginPath();
-      ctx.arc(px, py, pipRadiusPx * 0.75, 0.18 * Math.PI, 0.78 * Math.PI);
-      ctx.strokeStyle = "#55473E";
-      ctx.lineWidth = pipRadiusPx * 0.16;
-      ctx.lineCap = "round";
-      ctx.stroke();
-
-      // Chispa especular cartoon pintada a pincel
-      ctx.beginPath();
-      ctx.ellipse(
-        px - pipRadiusPx * 0.34,
-        py - pipRadiusPx * 0.34,
-        pipRadiusPx * 0.20,
-        pipRadiusPx * 0.11,
-        -0.65,
-        0,
-        TAU
-      );
-      ctx.fillStyle = "#6E5D52";
-      ctx.fill();
-    }
+    const isShortWord = face.word.length <= 4;
+    const wordMaxW = isShortWord ? plaqueW * 0.74 : plaqueW * 0.84;
+    const wordH = isShortWord ? plaqueH * 0.44 : plaqueH * 0.40;
+    drawDieWord(ctx, face, cx, cy, wordMaxW, wordH);
 
     ctx.restore();
   }
@@ -292,19 +499,15 @@
   // ============================================================================
   // 2. GEOMETRÍA 3D DE DADOS REDONDEADOS CON PUNTOS HUNDIDOS Y SILUETA EXPRESIVA
   // ============================================================================
-  // Definición de las 6 caras de un dado estándar (caras opuestas suman 7):
-  // +Z: 1, -Z: 6, +Y: 2, -Y: 5, +X: 3, -X: 4
   const CUBE_FACES = [
-    { faceNum: 1, normal: [ 0,  0,  1], right: [ 1,  0,  0], up: [ 0,  1,  0] }, // +Z
-    { faceNum: 2, normal: [ 0,  1,  0], right: [ 1,  0,  0], up: [ 0,  0, -1] }, // +Y
-    { faceNum: 3, normal: [ 1,  0,  0], right: [ 0,  0, -1], up: [ 0,  1,  0] }, // +X
-    { faceNum: 4, normal: [-1,  0,  0], right: [ 0,  0,  1], up: [ 0,  1,  0] }, // -X
-    { faceNum: 5, normal: [ 0, -1,  0], right: [ 1,  0,  0], up: [ 0,  0,  1] }, // -Y
-    { faceNum: 6, normal: [ 0,  0, -1], right: [-1,  0,  0], up: [ 0,  1,  0] }  // -Z
+    { faceNum: 1, word: FACES[0].word, normal: [ 0,  0,  1], right: [ 1,  0,  0], up: [ 0,  1,  0] },
+    { faceNum: 2, word: FACES[1].word, normal: [ 0,  1,  0], right: [ 1,  0,  0], up: [ 0,  0, -1] },
+    { faceNum: 3, word: FACES[2].word, normal: [ 1,  0,  0], right: [ 0,  0, -1], up: [ 0,  1,  0] },
+    { faceNum: 4, word: FACES[3].word, normal: [-1,  0,  0], right: [ 0,  0,  1], up: [ 0,  1,  0] },
+    { faceNum: 5, word: FACES[4].word, normal: [ 0, -1,  0], right: [ 1,  0,  0], up: [ 0,  0,  1] },
+    { faceNum: 6, word: FACES[5].word, normal: [ 0,  0, -1], right: [-1,  0,  0], up: [ 0,  1,  0] }
   ];
 
-  // Evalúa la posición 3D, normal de iluminación y normal suave de contorno para un punto (u, v) en [-1, 1]^2
-  // sobre la cara `faceDef`, incluyendo esquinas redondeadas, puntos cóncavos hundidos y asimetría cartoon
   function evaluateDieSurfacePoint(faceDef, u, v, variantSeed) {
     const N = faceDef.normal;
     const R = faceDef.right;
@@ -335,33 +538,24 @@
 
     let nx = rnx, ny = rny, nz = rnz;
 
-    // Hundimiento cóncavo 3D real de los puntos circulares (del 1 al 6)
-    const pips = PIP_LAYOUTS[faceDef.faceNum];
-    const pipRad = faceDef.faceNum === 1 ? 0.190 : 0.158;
-    const pipDepth = 0.048;
-
-    for (let i = 0; i < pips.length; i++) {
-      const du = u - pips[i][0];
-      const dv = v - pips[i][1];
-      const dist = Math.hypot(du, dv);
-      if (dist < pipRad) {
-        const q = dist / pipRad;
-        const falloff = (1 - q * q) * (1 - q * q);
-        const indent = pipDepth * falloff;
-        px -= N[0] * indent;
-        py -= N[1] * indent;
-        pz -= N[2] * indent;
-
-        // Inclinación suave de la normal dentro de la cavidad cóncava del punto
-        const slope = (4 * pipDepth * q * (1 - q * q)) / pipRad;
-        const dirU = dist > 1e-5 ? du / dist : 0;
-        const dirV = dist > 1e-5 ? dv / dist : 0;
-        nx += (R[0] * dirU - U[0] * dirV) * slope * 0.85;
-        ny += (R[1] * dirU - U[1] * dirV) * slope * 0.85;
-        nz += (R[2] * dirU - U[2] * dirV) * slope * 0.85;
+    const qu = Math.abs(u) / 0.64;
+    const qv = Math.abs(v) / 0.48;
+    const qMax = Math.max(qu, qv);
+    if (qMax < 1.0) {
+      const falloff = (1 - qMax * qMax) * (1 - qMax * qMax);
+      const indent = 0.020 * falloff;
+      px -= N[0] * indent;
+      py -= N[1] * indent;
+      pz -= N[2] * indent;
+      const edgeRim = smoothstep(0.82, 0.98, qMax) * (1 - smoothstep(0.98, 1.0, qMax));
+      if (edgeRim > 0) {
+        const dirU = qu >= qv ? Math.sign(u) : 0;
+        const dirV = qv > qu ? Math.sign(v) : 0;
+        nx += (R[0] * dirU - U[0] * dirV) * edgeRim * 0.22;
+        ny += (R[1] * dirU - U[1] * dirV) * edgeRim * 0.22;
+        nz += (R[2] * dirU - U[2] * dirV) * edgeRim * 0.22;
         const nl = Math.hypot(nx, ny, nz) || 1;
         nx /= nl; ny /= nl; nz /= nl;
-        break;
       }
     }
 
@@ -522,39 +716,87 @@
     return out;
   }
 
-  // Orientaciones canónicas Euler [rx, ry, rz] para que la cara `n` quede mirando hacia arriba/frente
-  const FACE_ROTATIONS = {
-    1: [ 22 * DEG, -28 * DEG,   8 * DEG],
-    2: [ 68 * DEG,  24 * DEG, -14 * DEG],
-    3: [ 20 * DEG, -68 * DEG,  12 * DEG],
-    4: [ 24 * DEG,  66 * DEG, -10 * DEG],
-    5: [-66 * DEG, -26 * DEG,  15 * DEG],
-    6: [ 24 * DEG, 152 * DEG, -12 * DEG]
-  };
+  function matMul3(A, B) {
+    const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        for (let k = 0; k < 3; k++) C[r][c] += A[r][k] * B[k][c];
+      }
+    }
+    return C;
+  }
+
+  function computeDieEulerForFace(faceDef, pitchUpDeg, yawDeg, rollDeg) {
+    const fR = faceDef.right;
+    const fU = faceDef.up;
+    const fN = faceDef.normal;
+    const tilt = [pitchUpDeg * DEG, yawDeg * DEG, rollDeg * DEG];
+    const wR = rotateVec3YXZ([1, 0, 0], tilt[0], tilt[1], tilt[2]);
+    const wU = rotateVec3YXZ([0, 1, 0], tilt[0], tilt[1], tilt[2]);
+    const wN = rotateVec3YXZ([0, 0, 1], tilt[0], tilt[1], tilt[2]);
+    const W = [[wR[0], wU[0], wN[0]], [wR[1], wU[1], wN[1]], [wR[2], wU[2], wN[2]]];
+    const FT = [[fR[0], fR[1], fR[2]], [fU[0], fU[1], fU[2]], [fN[0], fN[1], fN[2]]];
+    const M = matMul3(W, FT);
+    const rx = Math.asin(clamp(-M[1][2], -1, 1));
+    const ry = Math.atan2(M[0][2], M[2][2]);
+    const rz = Math.atan2(M[1][0], M[1][1]);
+    return [rx, ry, rz];
+  }
+
+  function resolveFaceNumber(input, rng = Math.random) {
+    if (typeof input === "number" && Number.isFinite(input)) {
+      return (((Math.round(input) - 1) % 6) + 6) % 6 + 1;
+    }
+    if (typeof input === "string") {
+      const upper = input.trim().toUpperCase();
+      const matches = CUBE_FACES.filter(face => face.word === upper);
+      if (matches.length) return matches[Math.floor(rng() * matches.length)].faceNum;
+    }
+    return 1 + Math.floor(rng() * 6);
+  }
+
+  function getVisibleFace(rot, scenePitch = 18 * DEG, sceneYaw = 0) {
+    let bestTop = CUBE_FACES[0];
+    let bestTopY = -Infinity;
+    let bestFront = CUBE_FACES[0];
+    let bestFrontZ = -Infinity;
+    for (let i = 0; i < CUBE_FACES.length; i++) {
+      const cf = CUBE_FACES[i];
+      const wn = rotateVec3YXZ(cf.normal, rot[0], rot[1], rot[2]);
+      if (wn[1] > bestTopY) {
+        bestTopY = wn[1];
+        bestTop = cf;
+      }
+      const cn = rotateVec3YXZ(wn, scenePitch, sceneYaw, 0);
+      if (cn[2] > bestFrontZ) {
+        bestFrontZ = cn[2];
+        bestFront = cf;
+      }
+    }
+    return { top: bestTop, front: bestFront };
+  }
 
   function getPairPose(poseName, faceA, faceB) {
-    const fA = faceA || 5;
-    const fB = faceB || 6;
+    const fA = resolveFaceNumber(faceA || 1);
+    const fB = resolveFaceNumber(faceB || 2);
+    const defA = CUBE_FACES[fA - 1];
+    const defB = CUBE_FACES[fB - 1];
     if (poseName === "table") {
-      // Composición clásica sobre mesa (como Imagen de Referencia 1)
       return {
-        dieA: { pos: [-0.92, -0.20,  0.22], rot: [-18 * DEG,  34 * DEG,   4 * DEG], value: fA },
-        dieB: { pos: [ 0.94,  0.18, -0.22], rot: [ 22 * DEG, -28 * DEG, -14 * DEG], value: fB }
+        dieA: { pos: [-0.92, -0.20,  0.22], rot: computeDieEulerForFace(defA, -50,  16,  4), value: fA, word: defA.word },
+        dieB: { pos: [ 0.94,  0.18, -0.22], rot: computeDieEulerForFace(defB, -50, -16, -5), value: fB, word: defB.word }
       };
     }
-    // Composición dinámica en el aire (como Imágenes de Referencia 2 y 3)
-    const baseA = FACE_ROTATIONS[fA] || FACE_ROTATIONS[5];
-    const baseB = FACE_ROTATIONS[fB] || FACE_ROTATIONS[6];
     return {
-      dieA: { pos: [-0.90, -0.52,  0.18], rot: [baseA[0], baseA[1] + 0.18, baseA[2]], value: fA },
-      dieB: { pos: [ 0.90,  0.54, -0.18], rot: [baseB[0] + 0.15, baseB[1] - 0.22, baseB[2] - 0.18], value: fB }
+      dieA: { pos: [-0.90, -0.44,  0.18], rot: computeDieEulerForFace(defA, -50,  14,  5), value: fA, word: defA.word },
+      dieB: { pos: [ 0.90,  0.46, -0.18], rot: computeDieEulerForFace(defB, -50, -15, -6), value: fB, word: defB.word }
     };
   }
 
   function createDadosGeometry(options) {
     const opts = options || {};
     const outlineThickness = typeof opts.outlineThickness === "number" ? opts.outlineThickness : 0.042;
-    const pose = getPairPose(opts.pose || "dynamic", opts.faceA || 5, opts.faceB || 6);
+    const pose = getPairPose(opts.pose || "dynamic", opts.faceA || 1, opts.faceB || 2);
 
     const dieALocal = createSingleDieMesh(1, outlineThickness);
     const dieBLocal = createSingleDieMesh(2, outlineThickness);
@@ -1003,8 +1245,8 @@
       autoRotate: true,
       autoRotateSpeed: 0.40,
       pose: "dynamic",
-      faceA: 5,
-      faceB: 6,
+      faceA: 1,
+      faceB: 2,
       onRollResult: null
     }, userOptions || {});
 
@@ -1097,17 +1339,19 @@
       uInkColor: gl.getUniformLocation(outProg, "uInkColor")
     };
 
-    const initialPose = getPairPose(opts.pose, opts.faceA, opts.faceB);
+    const initFaceA = resolveFaceNumber(opts.faceA);
+    const initFaceB = resolveFaceNumber(opts.faceB);
+    const initialPose = getPairPose(opts.pose, initFaceA, initFaceB);
     const state = {
       rotY: 0,
       cameraScale: opts.cameraScale || 1,
-      pitchX: 6 * DEG,
+      pitchX: 18 * DEG,
       velY: 0,
       autoRotate: !!opts.autoRotate,
       outlineWidth: opts.outlineWidth,
       poseName: opts.pose,
-      faceA: opts.faceA,
-      faceB: opts.faceB,
+      faceA: initFaceA,
+      faceB: initFaceB,
       dieA: { pos: initialPose.dieA.pos.slice(), rot: initialPose.dieA.rot.slice() },
       dieB: { pos: initialPose.dieB.pos.slice(), rot: initialPose.dieB.rot.slice() },
       rolling: false,
@@ -1117,6 +1361,8 @@
       startB: null,
       targetA: null,
       targetB: null,
+      canonicalA: initialPose.dieA.rot.slice(),
+      canonicalB: initialPose.dieB.rot.slice(),
       dragging: false,
       lastPointerX: 0,
       lastPointerY: 0,
@@ -1126,6 +1372,32 @@
       paused: false,
       destroyed: false
     };
+
+    function buildRollPayload(fA, fB) {
+      return {
+        faceA: fA,
+        faceB: fB,
+        wordA: CUBE_FACES[fA - 1].word,
+        wordB: CUBE_FACES[fB - 1].word
+      };
+    }
+
+    function getCurrentFaces() {
+      const visA = getVisibleFace(state.dieA.rot, state.pitchX, state.rotY);
+      const visB = getVisibleFace(state.dieB.rot, state.pitchX, state.rotY);
+      return {
+        faceA: state.faceA,
+        faceB: state.faceB,
+        wordA: CUBE_FACES[state.faceA - 1].word,
+        wordB: CUBE_FACES[state.faceB - 1].word,
+        topFaceA: visA.top.faceNum,
+        topFaceB: visB.top.faceNum,
+        topA: visA.top.word,
+        topB: visB.top.word,
+        frontA: visA.front.word,
+        frontB: visB.front.word
+      };
+    }
 
     function resize() {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1191,9 +1463,13 @@
         state.dieB.pos[1] += hop * 0.85;
 
         if (t >= 1) {
+          state.dieA.pos = state.targetA.pos.slice();
+          state.dieB.pos = state.targetB.pos.slice();
+          state.dieA.rot = state.canonicalA.slice();
+          state.dieB.rot = state.canonicalB.slice();
           state.rolling = false;
           if (typeof opts.onRollResult === "function") {
-            opts.onRollResult({ faceA: state.faceA, faceB: state.faceB, sum: state.faceA + state.faceB });
+            opts.onRollResult(buildRollPayload(state.faceA, state.faceB));
           }
         }
       }
@@ -1299,17 +1575,19 @@
     state.rafId = requestAnimationFrame(render);
 
     function rollDice(forcedA, forcedB, instant = false) {
-      const fA = forcedA || (1 + Math.floor(Math.random() * 6));
-      const fB = forcedB || (1 + Math.floor(Math.random() * 6));
+      const fA = resolveFaceNumber(forcedA);
+      const fB = resolveFaceNumber(forcedB);
       state.faceA = fA;
       state.faceB = fB;
 
       const target = getPairPose(state.poseName, fA, fB);
+      state.canonicalA = target.dieA.rot.slice();
+      state.canonicalB = target.dieB.rot.slice();
+      const result = buildRollPayload(fA, fB);
       if (instant) {
         state.dieA = { pos: target.dieA.pos.slice(), rot: target.dieA.rot.slice() };
         state.dieB = { pos: target.dieB.pos.slice(), rot: target.dieB.rot.slice() };
         state.rolling = false;
-        const result = { faceA: fA, faceB: fB, sum: fA + fB };
         if (typeof opts.onRollResult === "function") opts.onRollResult(result);
         return result;
       }
@@ -1330,7 +1608,7 @@
       };
       state.rollStartTime = performance.now();
       state.rolling = true;
-      return { faceA: fA, faceB: fB, sum: fA + fB };
+      return result;
     }
 
     function setPose(poseName, instant = false) {
@@ -1339,6 +1617,8 @@
         const pose = getPairPose(poseName, state.faceA, state.faceB);
         state.dieA = { pos: pose.dieA.pos.slice(), rot: pose.dieA.rot.slice() };
         state.dieB = { pos: pose.dieB.pos.slice(), rot: pose.dieB.rot.slice() };
+        state.canonicalA = pose.dieA.rot.slice();
+        state.canonicalB = pose.dieB.rot.slice();
         state.rolling = false;
       } else rollDice(state.faceA, state.faceB);
     }
@@ -1374,7 +1654,7 @@
     }
 
     function resetCamera() {
-      state.pitchX = 6 * DEG;
+      state.pitchX = 18 * DEG;
       state.rotY = 0;
       state.velY = 0;
     }
@@ -1420,6 +1700,7 @@
       setOutlineWidth,
       resetCamera,
       setCameraScale,
+      getCurrentFaces,
       atlasCanvas,
       destroy
     };
@@ -1427,8 +1708,13 @@
 
   return {
     PALETTE,
-    PIP_LAYOUTS,
+    FACES,
+    CUBE_FACES,
+    ROTULO_GLYPHS,
     ATLAS_LAYOUT,
+    resolveFaceNumber,
+    getVisibleFace,
+    getPairPose,
     paintDadosAtlas,
     createDadosGeometry,
     buildGLBBuffer,

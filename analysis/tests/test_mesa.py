@@ -43,7 +43,7 @@ class CivicTableTests(unittest.TestCase):
     def test_01_scroll_zoom_keeps_objects_on_the_table(self):
         page = self.page
         page.emulate_media(reduced_motion="no-preference")
-        self.assertEqual(page.locator("#mesa button").count(),9)
+        self.assertEqual(page.locator("#mesa button").count(),10)
         clutter = page.locator("#mesa").evaluate("""root => {const walker = document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const text=[];while(walker.nextNode()){const node=walker.currentNode;if(node.textContent.trim() && !node.parentElement.closest('.scene-header,svg')) text.push(node.textContent.trim());}return text;}""")
         self.assertEqual(clutter,[])
         for width,height in ((1440,1000),(1858,887),(390,844),(320,568)):
@@ -87,12 +87,13 @@ class CivicTableTests(unittest.TestCase):
         page.locator("#map-opener").click()
         self.assertTrue(page.locator("#object-dialog").evaluate("element => element.open"))
         self.assertEqual(page.locator("#mexico-map .state").count(), 32)
-        self.assertEqual(page.locator("#stat-ln").inner_text(), "98,330,348")
-        rail = page.locator(".explorer-filters").bounding_box()
-        map_box = page.locator(".map-region").bounding_box()
-        panel = page.locator("#radiografia").bounding_box()
+        self.assertIn("98,330,348", page.locator("#simple-comparison-body").inner_text())
+        panel = page.locator(".simple-info").bounding_box()
+        map_box = page.locator(".simple-main").bounding_box()
+        rail = page.locator(".simple-filters").bounding_box()
         self.assertLess(rail["x"] + rail["width"], map_box["x"])
         self.assertLess(map_box["x"] + map_box["width"], panel["x"])
+        self.assertEqual(page.locator(".simple-origin details").count(), 1)
         for _ in range(6):
             page.keyboard.press("Tab")
             self.assertTrue(page.evaluate("document.querySelector('#object-dialog').contains(document.activeElement)"))
@@ -108,7 +109,7 @@ class CivicTableTests(unittest.TestCase):
             "first": [ratio(frame.loc[frame["GRUPO_EDAD"].eq(AGES[0])]),ratio(frame.loc[frame["GRUPO_EDAD"].isin(AGES[1:3])])],
             "women": [ratio(frame.loc[frame["SEXO"].eq("Mujeres")]),ratio(frame.loc[frame["SEXO"].eq("Hombres")])],
             "inclusion": ["3,449","26,563"],
-            "election": ["12.56 pp","2009–2024"]
+            "election": ["Presidencial:", "Intermedia:"]
         }
         for key, values in expected.items():
             page.locator(f'[data-card="{key}"]').click()
@@ -124,12 +125,11 @@ class CivicTableTests(unittest.TestCase):
             self.close_object()
 
     def test_04_cards_open_the_corresponding_map_story(self):
-        for key, mode, panel in [("first","age","age"),("election","election","history"),("women","gender","territory"),("inclusion","gender","inclusion")]:
+        for key, story in [("first","age"),("election","election"),("women","inclusion"),("inclusion","inclusion")]:
             self.page.locator(f'[data-card="{key}"]').click()
             self.page.locator("#card-to-map").click()
             self.assertEqual(self.page.locator("#object-dialog").get_attribute("data-object"),"map")
-            self.assertEqual(self.page.locator("body").get_attribute("data-theme"),mode)
-            self.assertEqual(self.page.locator(f"#tab-{panel}").get_attribute("aria-selected"),"true")
+            self.assertEqual(self.page.locator(f'[data-story="{story}"]').get_attribute("aria-selected"),"true")
             self.close_object()
 
     def test_05_escape_interrupts_the_approach_and_restores_the_source(self):
@@ -158,11 +158,9 @@ class CivicTableTests(unittest.TestCase):
             self.assertEqual(page.evaluate("document.documentElement.scrollWidth"),width)
             page.locator("#map-opener").click()
             if width < 651:
-                self.assertFalse(page.locator("#map-controls").evaluate("e=>e.open"))
-                box = page.locator(".map-region").bounding_box()
+                box = page.locator(".simple-main").bounding_box()
                 self.assertLess(box["y"],350)
-                page.locator("#map-controls > summary").click()
-                page.locator("#filter-year").select_option("2009")
+                page.locator('input[name="simple-year"][value="2009"]').check()
             self.close_object()
             page.locator('[data-card="inclusion"]').click()
             page.locator("#flip-card-control").click()
@@ -178,7 +176,7 @@ class CivicTableTests(unittest.TestCase):
         self.assertEqual(config["outputDirectory"],"public")
         self.assertEqual(config["buildCommand"],"npm run build")
         sources = self.page.evaluate("[...new Set([...document.images].map(image => image.getAttribute('src')).filter(Boolean))]")
-        self.assertEqual(len(sources),6)
+        self.assertEqual(len(sources),7)
         for source in sources:
             self.assertTrue(source.startswith("assets/imgs/"))
             self.assertTrue((BASE / source).is_file())

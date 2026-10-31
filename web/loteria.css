@@ -1,0 +1,58 @@
+.loteria-object{left:calc(50% - 34vw / var(--zoom-limit));top:calc(50% - 34svh / var(--zoom-limit));width:calc(var(--toy-size) * .8);transform:translate(-50%,-50%) rotate(-8deg);z-index:2}
+.loteria-desk{display:flex;width:100%;aspect-ratio:1.52;padding:0;border:0;background:transparent;filter:drop-shadow(3px 5px 4px #372c2459);transition:transform 150ms cubic-bezier(.22,1,.36,1)}
+.loteria-desk:hover,.loteria-desk:focus-visible{transform:translateY(-5px) rotate(2deg)}
+.loteria-desk:active{transform:translateY(-2px) scale(.98)}
+.loteria-desk:focus-visible{outline:3px solid #23749a;outline-offset:5px}
+.loteria-desk-board{display:flex;flex-direction:column;gap:3px;width:58%;height:88%;padding:5px;background:#f5d36b;border:3px solid #9e472f;border-radius:3px;box-shadow:2px 4px 5px #34271d40;color:#7d2531;font:800 clamp(8px,.7vw,13px) Jakarta,sans-serif;letter-spacing:.08em;text-align:center}
+.loteria-desk-board+ .loteria-desk-board{margin-left:-16%;margin-top:12%;transform:rotate(12deg);background:#f4e2a1}
+.loteria-desk-grid{display:block;flex:1;background:repeating-linear-gradient(90deg,transparent 0 30%,#b55b2f 30% 32%,transparent 32% 64%,#b55b2f 64% 66%,transparent 66%),repeating-linear-gradient(0deg,transparent 0 30%,#b55b2f 30% 32%,transparent 32% 64%,#b55b2f 64% 66%,transparent 66%);border:1px solid #b55b2f}
+.focus-surface.is-loteria{width:min(1180px,100%);height:auto;max-height:100%;overflow:auto;scrollbar-width:thin}
+.loteria-focus{padding:22px 26px;background:#f7f0d9;border:1px solid #e5d7b6;border-radius:12px;box-shadow:0 20px 60px #101b2259}
+.loteria-focus[hidden],.loteria-setup[hidden],.loteria-play[hidden],.loteria-board-panel[hidden],#loteria-restart[hidden]{display:none}
+.loteria-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.loteria-eyebrow{font:700 10px JetBrains,monospace;color:#a32c39;letter-spacing:.04em}
+.loteria-head h2{margin:3px 0 4px;font-size:clamp(25px,3vw,38px);line-height:1.1;letter-spacing:-.035em;text-wrap:balance}
+.loteria-head p{margin:0;font-size:13px;line-height:1.5;text-wrap:pretty}
+.loteria-focus button:focus-visible{outline:3px solid #23749a;outline-offset:3px}
+.loteria-setup{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:18px;padding:20px;background:#fff9e9;border:1px solid #dec692;border-radius:8px}
+.loteria-setup fieldset{display:flex;flex-wrap:wrap;gap:10px 18px;border:0;margin:0;padding:0}
+.loteria-setup legend{margin-bottom:9px;font-weight:800;font-size:14px}
+.loteria-setup label{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px}
+.loteria-setup input{accent-color:#9e2f3d}
+.loteria-setup button,#loteria-restart{min-height:42px;padding:9px 16px;border:0;border-radius:6px;background:#9e2f3d;color:#fff9e9;font:700 13px Jakarta,sans-serif;transition:transform 120ms cubic-bezier(.22,1,.36,1),opacity 120ms cubic-bezier(.22,1,.36,1)}
+.loteria-setup button:hover,#loteria-restart:hover{background:#832530}
+.loteria-setup button:active,#loteria-restart:active{transform:scale(.98)}
+.loteria-play{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,260px);gap:20px;align-items:start}
+.loteria-boards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px;min-width:0}
+.loteria-board-panel{min-width:0;padding:12px;background:#fff9e9;border:1px solid #dec692;border-radius:7px}
+.loteria-board-panel h3,.loteria-caller h3{display:flex;justify-content:space-between;margin:0 0 9px;font-size:15px;letter-spacing:-.02em}
+.loteria-board-panel h3 span{font:700 12px JetBrains,monospace}
+.loteria-board{display:grid;grid-template-columns:repeat(var(--board-size),minmax(0,1fr));gap:3px;width:100%;padding:4px;background:#a32c39;border:2px solid #a32c39;border-radius:3px}
+.loteria-cell{position:relative;display:block;width:100%;aspect-ratio:896/1200;min-width:0;padding:0;border:0;background:#e9d4ad;overflow:hidden;transition:transform 120ms cubic-bezier(.22,1,.36,1)}
+.loteria-cell>img:first-child{display:block;width:100%;height:100%;object-fit:cover}
+.loteria-cell:hover:not(:disabled){transform:translateY(-2px);z-index:1}
+.loteria-cell:active:not(:disabled){transform:scale(.98)}
+.loteria-cell:disabled{cursor:default}
+.loteria-bean{position:absolute;left:31%;top:31%;width:40%;height:auto;aspect-ratio:1;object-fit:contain;filter:drop-shadow(1px 2px 2px #34251c88);transform:rotate(-15deg);pointer-events:none}
+.loteria-caller{padding:12px;background:#fff9e9;border:1px solid #dec692;border-radius:7px;text-align:center}
+.loteria-call{display:block;width:min(100%,205px);aspect-ratio:896/1200;margin:auto;padding:0;border:0;background:transparent;perspective:900px;color:#293c43}
+.loteria-call-inner{display:block;position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 300ms cubic-bezier(.22,1,.36,1)}
+.loteria-call.is-flipped .loteria-call-inner{transform:rotateY(180deg)}
+.loteria-call-front,.loteria-call-back{position:absolute;inset:0;display:block;overflow:hidden;backface-visibility:hidden;border-radius:3px;box-shadow:0 4px 10px #35261b45}
+.loteria-call-front img,.loteria-call-back img{width:100%;height:100%;object-fit:cover}
+.loteria-call-back{transform:rotateY(180deg)}
+.loteria-call-back>span{position:absolute;inset:15% 12%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;line-height:1.45}
+.loteria-call-back strong{font-size:clamp(17px,2vw,23px);line-height:1.1;text-wrap:balance}
+.loteria-call-back small{font-size:12px;text-wrap:pretty}
+.loteria-call:active:not(:disabled){transform:scale(.98)}
+.loteria-call:disabled{cursor:default}
+#loteria-status{min-height:38px;margin:12px 0 0;font-size:12px;line-height:1.5;text-wrap:pretty}
+#loteria-remaining{margin:5px 0 0;font:600 11px JetBrains,monospace;color:#6c5f50}
+@media(max-width:900px){.loteria-object{left:calc(50% - 35vw / var(--zoom-limit));top:var(--row-toys);width:calc(var(--toy-size) * .7)}.loteria-setup{grid-template-columns:1fr 1fr}.loteria-setup button{grid-column:1/-1}}
+@media(max-width:650px){.loteria-object{left:calc(50% - 38vw / var(--zoom-limit))}.loteria-focus{padding:15px}.loteria-head{align-items:start}.loteria-play{grid-template-columns:1fr}.loteria-caller{grid-row:1}.loteria-call{width:min(36vw,160px)}.loteria-caller h3{justify-content:center}.loteria-setup{grid-template-columns:1fr}}
+@media(max-width:599px) and (max-height:450px){.loteria-object{left:calc(50% - 38vw / var(--zoom-limit));top:calc(50% - 23svh / var(--zoom-limit))}}
+@media(min-width:600px) and (max-width:900px) and (max-height:650px){.loteria-object{left:50%;top:calc(50% - 29svh / var(--zoom-limit))}}
+@media(max-height:650px) and (min-width:600px) and (max-width:1280px),(min-width:901px) and (max-width:1280px) and (max-height:900px){.loteria-object{left:50%;top:calc(50% - 29svh / var(--zoom-limit))}}
+@media(min-width:901px) and (max-width:1280px) and (max-height:900px){.loteria-object{top:calc(50% - 34svh / var(--zoom-limit))}}
+@media(min-width:1281px) and (max-height:800px){.loteria-object{left:calc(50% - 30vw / var(--zoom-limit));top:calc(50% - 36svh / var(--zoom-limit));width:calc(var(--toy-size) * .7)}}
+@media(prefers-reduced-motion:reduce){.loteria-desk,.loteria-call-inner,.loteria-cell,.loteria-setup button,#loteria-restart{transition:none}}

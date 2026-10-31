@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pirinola 3D · Mito, Realidad, Pregunta</title>
+  <link rel="icon" href="data:,">
+  <title>Pirinola 3D · Fácil, Medio, Difícil</title>
   <style>
     @font-face {
       font-family: "JakartaLocal";
-      src: url("../fonts/PlusJakartaSans.ttf") format("truetype");
+      src: url("../../fonts/PlusJakartaSans.ttf") format("truetype");
       font-weight: 200 800;
       font-display: swap;
     }
     @font-face {
       font-family: "MonoLocal";
-      src: url("../fonts/JetBrainsMono.ttf") format("truetype");
+      src: url("../../fonts/JetBrainsMono.ttf") format("truetype");
       font-weight: 100 800;
       font-display: swap;
     }
@@ -213,9 +214,9 @@
       gap: 7px;
     }
 
-    .btn-mito { color: var(--crimson); }
-    .btn-realidad { color: var(--cobalt); }
-    .btn-pregunta { color: var(--emerald); }
+    .btn-facil { color: var(--emerald); }
+    .btn-medio { color: var(--cobalt); }
+    .btn-dificil { color: var(--crimson); }
 
     .backdrop-grid {
       display: grid;
@@ -308,7 +309,7 @@
       <canvas id="pirinola-canvas"></canvas>
       <div class="badge-top" id="status-badge">
         <span>Cara frontal:</span>
-        <span class="face-pill" id="active-face-pill">MITO</span>
+        <span class="face-pill" id="active-face-pill" style="background: var(--emerald)">FÁCIL</span>
       </div>
       <div class="hint-bottom">Arrastra horizontalmente para rotar en el eje Y · Vertical para inclinar</div>
     </main>
@@ -316,16 +317,16 @@
     <aside class="controls" aria-label="Controles del modelo 3D">
       <div>
         <h1>La Pirinola Cívica 3D</h1>
-        <p class="subtitle">Estética cel-shaded estilo animación mexicana con contornos de tinta negra, madera tallada hand-painted y rotación centrada en el eje Y.</p>
+        <p class="subtitle">Estética cel-shaded estilo animación mexicana con contornos de tinta negra, madera tallada hand-painted y seis caras de dificultad (dos FÁCIL, dos MEDIO y dos DIFÍCIL).</p>
       </div>
 
       <div class="group">
         <span class="group-label">Giro en eje Y</span>
         <button type="button" class="btn-primary" id="btn-spin-random">¡Girar pirinola al azar!</button>
         <div class="face-grid">
-          <button type="button" class="btn-mito" data-spin="MITO">MITO</button>
-          <button type="button" class="btn-realidad" data-spin="REALIDAD">REALIDAD</button>
-          <button type="button" class="btn-pregunta" data-spin="PREGUNTA">PREGUNTA</button>
+          <button type="button" class="btn-facil" data-spin="FÁCIL">FÁCIL</button>
+          <button type="button" class="btn-medio" data-spin="MEDIO">MEDIO</button>
+          <button type="button" class="btn-dificil" data-spin="DIFÍCIL">DIFÍCIL</button>
         </div>
       </div>
 
@@ -362,7 +363,7 @@
 
       <div class="specs">
         Pivote: (0, 0, 0) · Eje Y simétrico<br>
-        Caras: 6 alternadas (MITO / REALIDAD / PREGUNTA)<br>
+        Caras: 6 alternadas (FÁCIL / MEDIO / DIFÍCIL)<br>
         Textura: 2048×2048 hand-painted embebida
       </div>
     </aside>
