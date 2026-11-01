@@ -84,4 +84,4 @@ Los scripts `analysis/01_…` a `analysis/03_…` documentan el procesamiento de
 
 ## Equipo
 
-**Camaradas de la Nación:** Sandra Erika Sánchez Fragozo y Saraí Sánchez Fragozo.
+**Camaradas de la Democracia:** Sandra Erika Sánchez Fragozo y Saraí Sánchez Fragozo.
