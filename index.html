@@ -983,7 +983,7 @@ body{background:#392d29;color:var(--table-ink)}
 .notebook-team p{margin:0 auto;max-width:38ch;font-size:15px;line-height:1.6}
 .notebook-team-mark{display:grid;place-items:center;width:92px;height:92px;margin:31px auto 13px;border:2px solid #92333a;border-radius:50%;background:#f4e1ba;color:#92333a;font:800 28px Jakarta,sans-serif}
 @media(max-width:1100px){.notebook-achievement{grid-template-columns:40px minmax(0,1fr);gap:7px;padding:7px}.notebook-badge{width:38px;height:38px;font-size:17px}.notebook-achievement strong{font-size:13px}.notebook-achievement small{font-size:11px}.notebook-achievement em{font-size:10px}}
-@media(max-width:650px){.notebook-fold-previous{top:calc((100vw - 34px) / 1.28 - 58px);bottom:auto}.notebook-achievements{gap:6px}.notebook-achievement{padding:4px}.notebook-paper .notebook-lead{font-size:11px}.notebook-method p{font-size:12px}.notebook-team .notebook-kicker{font-size:13px}.notebook-team-mark{margin-top:20px}}
+@media(max-width:650px){.focus-surface.is-notebook{height:calc(100dvh - 82px);max-height:100%;overflow:hidden}.notebook-focus,.notebook-spread{height:100%}.notebook-spread{display:flex}.notebook-paper{flex:1;height:100%;overflow:hidden;padding:25px 18px 48px 42px;font-size:clamp(13px,3.5vw,15px);line-height:1.5;border-radius:3px;box-shadow:none}.notebook-paper[hidden]{display:none}.notebook-paper::before{left:32px}.notebook-paper-right::after{display:none}.notebook-paper h2,.notebook-paper h3{margin-bottom:15px;font-size:clamp(22px,6vw,27px)}.notebook-paper ol{margin-bottom:0}.notebook-paper li{margin-bottom:10px}.notebook-paper p{line-height:1.5}.notebook-paper dt{line-height:1.5}.notebook-paper dd{margin-bottom:13px;line-height:1.5}.notebook-fold-previous{top:auto;bottom:0}.notebook-achievements{gap:6px}.notebook-achievement{padding:4px}.notebook-paper .notebook-lead{font-size:11px}.notebook-method p{font-size:12px}.notebook-team .notebook-kicker{font-size:13px}.notebook-team-mark{margin-top:20px}}
 @media(prefers-reduced-motion:reduce){.notebook-fold{transition:none}}
 </style><style>.credential-object{left:72%;top:53%;width:calc(var(--stage-width) * .1);transform:translate(-50%,-50%) rotate(-8deg);z-index:2}
 .credential-desk{position:relative;display:block;width:100%;aspect-ratio:1.6;padding:0;overflow:hidden;border:2px solid #efead6;border-radius:5px;background:#e6efe7;box-shadow:3px 7px 8px #372b2a52;cursor:pointer;transition:transform 150ms cubic-bezier(.22,1,.36,1)}
@@ -1085,6 +1085,7 @@ body{background:#392d29;color:var(--table-ink)}
 @media(max-width:650px){.credential-object{width:calc(var(--map-size) * .35)}}
 @media(min-width:600px) and (max-width:650px) and (max-height:450px){.credential-object{width:calc(var(--map-size) * .33)}}
 @media(max-width:650px){.credential-desk-band{height:28%}.credential-desk-seal{top:4%;right:7%;font-size:clamp(4px,1.6vw,8px);line-height:1;letter-spacing:.04em;white-space:nowrap}}
+@media(max-width:650px){.credential-preview{aspect-ratio:1.2}.credential-preview-main{gap:8px;padding:10px}.credential-preview-main dl{gap:1px}.credential-preview-main dd{margin-bottom:3px}.credential-preview-foot{padding:7px 5px;font-size:clamp(6px,1.8vw,8px);white-space:nowrap}}
 </style><style>.simple-explorer{display:grid;grid-template-columns:minmax(210px,245px) minmax(0,1fr) minmax(230px,280px);gap:16px;align-items:start;color:#263b44;font-family:Jakarta,system-ui,sans-serif;font-size:13px;line-height:1.55}
 .simple-explorer>aside,.simple-main{min-width:0;background:#faf9f3;border:1px solid #263b441f;border-radius:12px;padding:20px;box-shadow:0 2px 8px #263b440a}
 .simple-explorer h2{font-size:20px;line-height:1.12;letter-spacing:-.03em}.simple-explorer h3{font-size:16px;line-height:1.2;letter-spacing:-.02em}.simple-explorer p{max-width:65ch}.simple-intro,.simple-filters>p,.simple-map-header p,.simple-comparison-heading p{color:#52636b;margin-top:7px}.simple-eyebrow{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#216b80!important;margin:0 0 7px!important}
@@ -1648,7 +1649,35 @@ body{background:#392d29;color:var(--table-ink)}
   const guideLeft = left.innerHTML;
   const guideRight = right.innerHTML;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const mobile = matchMedia("(max-width: 650px)");
+  const guideSteps = [...left.querySelectorAll("ol li")].map(item => item.outerHTML);
+  const guideTerms = [...right.querySelectorAll("dt")].map(term => term.outerHTML + term.nextElementSibling.outerHTML);
+  const guidePage = (start, end) => `<h2>Guía de la mesa</h2><ol start="${start + 1}">${guideSteps.slice(start, end).join("")}</ol>`;
+  const glossaryPage = (start, end) => `<h3>${start ? "Más palabras para entender" : "Palabras para entender los datos"}</h3><dl>${guideTerms.slice(start, end).join("")}</dl>`;
+  const mobilePages = [
+    { spread: 0, side: "left", content: guidePage(0, 2) },
+    { spread: 0, side: "left", content: guidePage(2, 3) },
+    { spread: 0, side: "left", content: guidePage(3, 4) },
+    { spread: 0, side: "left", content: guidePage(4, 6) },
+    { spread: 0, side: "right", content: glossaryPage(0, 3) },
+    { spread: 0, side: "right", content: glossaryPage(3, 6) },
+    { spread: 1, side: "left", title: "Logros de exploración", items: [0, 2] },
+    { spread: 1, side: "left", title: "Logros de exploración", items: [2, 4] },
+    { spread: 1, side: "right", title: "Logros de juego", items: [4, 6] },
+    { spread: 1, side: "right", title: "Logros de juego", items: [6, 8] },
+    { spread: 2, side: "left", title: "Logros de preguntas", items: [8, 10] },
+    { spread: 2, side: "left", title: "Logros de preguntas", items: [10, 12] },
+    { spread: 2, side: "right", title: "Logros de curiosidad", items: [12, 14] },
+    { spread: 2, side: "right", title: "Logros de curiosidad", items: [14, 16] },
+    { spread: 3, side: "left", method: [0, 2] },
+    { spread: 3, side: "left", method: [2, 4] },
+    { spread: 3, side: "right", method: [0, 3] },
+    { spread: 3, side: "right", method: [3, 5] },
+    { spread: 4, side: "left" },
+    { spread: 4, side: "right" }
+  ];
   let spread = 0;
+  let pageIndex = 0;
   let turning = false;
 
   function save() {
@@ -1738,28 +1767,59 @@ body{background:#392d29;color:var(--table-ink)}
     $("notebook-page-status").textContent = `Páginas ${index * 2 + 1} y ${index * 2 + 2} de 10`;
   }
 
+  function renderNotebook(index) {
+    if (!mobile.matches) {
+      left.hidden = false;
+      right.hidden = false;
+      renderSpread(index);
+      return;
+    }
+    pageIndex = index;
+    const page = mobilePages[index];
+    renderSpread(page.spread);
+    if (page.content) (page.side === "left" ? left : right).innerHTML = page.content;
+    if (page.items) achievementPage(page.side === "left" ? left : right, page.title, definitions.slice(...page.items));
+    if (page.method) {
+      const method = (page.side === "left" ? left : right).querySelector(".notebook-method");
+      const children = [...method.children];
+      method.replaceChildren(...children.slice(0, 2), ...children.slice(page.method[0] + 2, page.method[1] + 2));
+    }
+    left.hidden = page.side !== "left";
+    right.hidden = page.side !== "right";
+    $("notebook-previous").hidden = index === 0;
+    $("notebook-next").hidden = index === mobilePages.length - 1;
+    $("notebook-previous").setAttribute("aria-label", "Página anterior");
+    $("notebook-next").setAttribute("aria-label", "Página siguiente");
+    $("notebook-page-status").textContent = `Página ${index + 1} de ${mobilePages.length}`;
+  }
+
   async function turn(delta) {
-    const target = spread + delta;
-    if (turning || target < 0 || target > 4) return;
+    const isMobile = mobile.matches;
+    const target = (isMobile ? pageIndex : spread) + delta;
+    const last = isMobile ? mobilePages.length - 1 : 4;
+    if (turning || target < 0 || target > last) return;
     turning = true;
-    const outgoing = delta > 0 ? right : left;
+    const outgoing = isMobile ? left.hidden ? right : left : delta > 0 ? right : left;
     if (!reduced.matches) {
       try { await outgoing.animate([{ transform: "rotateY(0deg)", opacity: 1 }, { transform: `rotateY(${delta > 0 ? -20 : 20}deg)`, opacity: .35 }], { duration: 210, easing: "cubic-bezier(.22,1,.36,1)" }).finished; } catch {}
     }
-    renderSpread(target);
-    const incoming = delta > 0 ? left : right;
+    renderNotebook(target);
+    const incoming = isMobile ? left.hidden ? right : left : delta > 0 ? left : right;
     if (!reduced.matches) {
       try { await incoming.animate([{ transform: `rotateY(${delta > 0 ? 18 : -18}deg)`, opacity: .35 }, { transform: "rotateY(0deg)", opacity: 1 }], { duration: 230, easing: "cubic-bezier(.22,1,.36,1)" }).finished; } catch {}
     }
     turning = false;
-    $(delta > 0 && target === 4 ? "notebook-previous" : delta < 0 && target === 0 ? "notebook-next" : delta > 0 ? "notebook-next" : "notebook-previous").focus({ preventScroll: true });
+    $(delta > 0 && target === last ? "notebook-previous" : delta < 0 && target === 0 ? "notebook-next" : delta > 0 ? "notebook-next" : "notebook-previous").focus({ preventScroll: true });
   }
 
   root.CivicAchievements = { definitions, award, record, progress: () => structuredClone(progress) };
   $("notebook-next").addEventListener("click", () => turn(1));
   $("notebook-previous").addEventListener("click", () => turn(-1));
-  document.addEventListener("civic:notebook-open", () => { renderSpread(0); award("guide"); });
-  document.addEventListener("civic:achievements-updated", () => { if (spread === 1 || spread === 2) renderSpread(spread); });
+  document.addEventListener("civic:notebook-open", () => { renderNotebook(0); award("guide"); });
+  document.addEventListener("civic:achievements-updated", () => { if (spread === 1 || spread === 2) renderNotebook(mobile.matches ? pageIndex : spread); });
+  mobile.addEventListener("change", () => {
+    if (!$("notebook-focus").hidden) renderNotebook(mobile.matches ? [0, 6, 10, 14, 18][spread] : spread);
+  });
   document.addEventListener("civic:map-open", () => {
     for (const input of document.querySelectorAll('input[name="simple-year"]:checked')) record("year", Number(input.value));
   });

@@ -320,6 +320,34 @@ class CivicTableTests(unittest.TestCase):
                 self.assertTrue(page.locator("#object-dialog").evaluate("node => node.scrollHeight <= node.clientHeight + 1"), (width, height, view))
             page.locator('[data-credential-tab="preview"]').click()
 
+    def test_12b_notebook_mobile_shows_one_complete_page_at_a_time(self):
+        page = self.page
+        for width,height in ((320,568),(390,844)):
+            page.set_viewport_size({"width":width,"height":height})
+            if page.locator("#notebook-focus").is_hidden():
+                page.locator("#notebook-opener").click()
+            for index in range(20):
+                visible = page.locator(".notebook-paper:visible")
+                self.assertEqual(visible.count(),1,(width,height,index))
+                self.assertTrue(visible.evaluate("node => node.scrollHeight <= node.clientHeight + 1"),(width,height,index))
+                self.assertIn(f"Página {index + 1} de 20",page.locator("#notebook-page-status").inner_text())
+                if index < 19: page.locator("#notebook-next").click()
+            self.assertTrue(page.locator("#notebook-next").is_hidden())
+            page.locator("#close-object").click()
+
+    def test_12c_credential_curp_is_visible_on_mobile(self):
+        page = self.page
+        for width,height in ((320,568),(390,844)):
+            page.set_viewport_size({"width":width,"height":height})
+            if page.locator("#credential-focus").is_hidden():
+                page.locator("#credential-opener").click()
+            page.locator('[data-credential-tab="form"]').click()
+            page.locator("#credential-curp").fill("LOPA010315MJCPRN09")
+            page.locator('[data-credential-tab="preview"]').click()
+            placement = page.evaluate("""() => {const value=document.getElementById('credential-curp-preview').getBoundingClientRect();const foot=document.querySelector('.credential-preview-foot').getBoundingClientRect();const card=document.getElementById('credential-preview').getBoundingClientRect();return {valueBottom:value.bottom,footTop:foot.top,cardWidth:card.width,cardHeight:card.height}}""")
+            self.assertLessEqual(placement["valueBottom"],placement["footTop"] - 2,(width,height,placement))
+            page.locator("#close-object").click()
+
     def test_13_atlas_title_and_year_menu_fit_on_a_narrow_screen(self):
         page = self.page
         page.set_viewport_size({"width": 650, "height": 600})

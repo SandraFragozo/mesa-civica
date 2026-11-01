@@ -29,7 +29,35 @@
   const guideLeft = left.innerHTML;
   const guideRight = right.innerHTML;
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const mobile = matchMedia("(max-width: 650px)");
+  const guideSteps = [...left.querySelectorAll("ol li")].map(item => item.outerHTML);
+  const guideTerms = [...right.querySelectorAll("dt")].map(term => term.outerHTML + term.nextElementSibling.outerHTML);
+  const guidePage = (start, end) => `<h2>Guía de la mesa</h2><ol start="${start + 1}">${guideSteps.slice(start, end).join("")}</ol>`;
+  const glossaryPage = (start, end) => `<h3>${start ? "Más palabras para entender" : "Palabras para entender los datos"}</h3><dl>${guideTerms.slice(start, end).join("")}</dl>`;
+  const mobilePages = [
+    { spread: 0, side: "left", content: guidePage(0, 2) },
+    { spread: 0, side: "left", content: guidePage(2, 3) },
+    { spread: 0, side: "left", content: guidePage(3, 4) },
+    { spread: 0, side: "left", content: guidePage(4, 6) },
+    { spread: 0, side: "right", content: glossaryPage(0, 3) },
+    { spread: 0, side: "right", content: glossaryPage(3, 6) },
+    { spread: 1, side: "left", title: "Logros de exploración", items: [0, 2] },
+    { spread: 1, side: "left", title: "Logros de exploración", items: [2, 4] },
+    { spread: 1, side: "right", title: "Logros de juego", items: [4, 6] },
+    { spread: 1, side: "right", title: "Logros de juego", items: [6, 8] },
+    { spread: 2, side: "left", title: "Logros de preguntas", items: [8, 10] },
+    { spread: 2, side: "left", title: "Logros de preguntas", items: [10, 12] },
+    { spread: 2, side: "right", title: "Logros de curiosidad", items: [12, 14] },
+    { spread: 2, side: "right", title: "Logros de curiosidad", items: [14, 16] },
+    { spread: 3, side: "left", method: [0, 2] },
+    { spread: 3, side: "left", method: [2, 4] },
+    { spread: 3, side: "right", method: [0, 3] },
+    { spread: 3, side: "right", method: [3, 5] },
+    { spread: 4, side: "left" },
+    { spread: 4, side: "right" }
+  ];
   let spread = 0;
+  let pageIndex = 0;
   let turning = false;
 
   function save() {
@@ -119,28 +147,59 @@
     $("notebook-page-status").textContent = `Páginas ${index * 2 + 1} y ${index * 2 + 2} de 10`;
   }
 
+  function renderNotebook(index) {
+    if (!mobile.matches) {
+      left.hidden = false;
+      right.hidden = false;
+      renderSpread(index);
+      return;
+    }
+    pageIndex = index;
+    const page = mobilePages[index];
+    renderSpread(page.spread);
+    if (page.content) (page.side === "left" ? left : right).innerHTML = page.content;
+    if (page.items) achievementPage(page.side === "left" ? left : right, page.title, definitions.slice(...page.items));
+    if (page.method) {
+      const method = (page.side === "left" ? left : right).querySelector(".notebook-method");
+      const children = [...method.children];
+      method.replaceChildren(...children.slice(0, 2), ...children.slice(page.method[0] + 2, page.method[1] + 2));
+    }
+    left.hidden = page.side !== "left";
+    right.hidden = page.side !== "right";
+    $("notebook-previous").hidden = index === 0;
+    $("notebook-next").hidden = index === mobilePages.length - 1;
+    $("notebook-previous").setAttribute("aria-label", "Página anterior");
+    $("notebook-next").setAttribute("aria-label", "Página siguiente");
+    $("notebook-page-status").textContent = `Página ${index + 1} de ${mobilePages.length}`;
+  }
+
   async function turn(delta) {
-    const target = spread + delta;
-    if (turning || target < 0 || target > 4) return;
+    const isMobile = mobile.matches;
+    const target = (isMobile ? pageIndex : spread) + delta;
+    const last = isMobile ? mobilePages.length - 1 : 4;
+    if (turning || target < 0 || target > last) return;
     turning = true;
-    const outgoing = delta > 0 ? right : left;
+    const outgoing = isMobile ? left.hidden ? right : left : delta > 0 ? right : left;
     if (!reduced.matches) {
       try { await outgoing.animate([{ transform: "rotateY(0deg)", opacity: 1 }, { transform: `rotateY(${delta > 0 ? -20 : 20}deg)`, opacity: .35 }], { duration: 210, easing: "cubic-bezier(.22,1,.36,1)" }).finished; } catch {}
     }
-    renderSpread(target);
-    const incoming = delta > 0 ? left : right;
+    renderNotebook(target);
+    const incoming = isMobile ? left.hidden ? right : left : delta > 0 ? left : right;
     if (!reduced.matches) {
       try { await incoming.animate([{ transform: `rotateY(${delta > 0 ? 18 : -18}deg)`, opacity: .35 }, { transform: "rotateY(0deg)", opacity: 1 }], { duration: 230, easing: "cubic-bezier(.22,1,.36,1)" }).finished; } catch {}
     }
     turning = false;
-    $(delta > 0 && target === 4 ? "notebook-previous" : delta < 0 && target === 0 ? "notebook-next" : delta > 0 ? "notebook-next" : "notebook-previous").focus({ preventScroll: true });
+    $(delta > 0 && target === last ? "notebook-previous" : delta < 0 && target === 0 ? "notebook-next" : delta > 0 ? "notebook-next" : "notebook-previous").focus({ preventScroll: true });
   }
 
   root.CivicAchievements = { definitions, award, record, progress: () => structuredClone(progress) };
   $("notebook-next").addEventListener("click", () => turn(1));
   $("notebook-previous").addEventListener("click", () => turn(-1));
-  document.addEventListener("civic:notebook-open", () => { renderSpread(0); award("guide"); });
-  document.addEventListener("civic:achievements-updated", () => { if (spread === 1 || spread === 2) renderSpread(spread); });
+  document.addEventListener("civic:notebook-open", () => { renderNotebook(0); award("guide"); });
+  document.addEventListener("civic:achievements-updated", () => { if (spread === 1 || spread === 2) renderNotebook(mobile.matches ? pageIndex : spread); });
+  mobile.addEventListener("change", () => {
+    if (!$("notebook-focus").hidden) renderNotebook(mobile.matches ? [0, 6, 10, 14, 18][spread] : spread);
+  });
   document.addEventListener("civic:map-open", () => {
     for (const input of document.querySelectorAll('input[name="simple-year"]:checked')) record("year", Number(input.value));
   });
