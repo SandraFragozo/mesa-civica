@@ -109,6 +109,23 @@ class OfflineDashboardTests(unittest.TestCase):
         self.assertLessEqual(bounds["scroll"], bounds["client"])
         self.assertEqual(self.page.locator("#simple-comparison-body tr").count(), 8)
 
+    def test_06_reset_filters_restores_defaults_without_clearing_states(self):
+        page = self.page
+        page.locator('.state[data-edocve="1"]').click()
+        page.locator("#simple-age-min").fill("2")
+        page.locator("#simple-age-max").fill("4")
+        page.locator('input[name="simple-sex"][value="0"]').uncheck()
+        page.locator('input[name="simple-zone"][value="2"]').uncheck()
+        page.locator('input[name="simple-year"][value="2012"]').check()
+        page.locator('input[name="simple-year"][value="2024"]').uncheck()
+        page.locator("#simple-reset-filters").click()
+        self.assertEqual(page.locator("#simple-age-min").input_value(), "0")
+        self.assertEqual(page.locator("#simple-age-max").input_value(), "7")
+        self.assertEqual(page.locator('input[name="simple-sex"]:checked').count(), 3)
+        self.assertEqual(page.locator('input[name="simple-zone"]:checked').count(), 3)
+        self.assertEqual(page.locator('input[name="simple-year"]:checked').evaluate_all("nodes => nodes.map(node => node.value)"), ["2024"])
+        self.assertEqual(page.locator('.state[aria-pressed="true"]').count(), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

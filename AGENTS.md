@@ -8,6 +8,7 @@ Este archivo guía a Codex, Antigravity y otros agentes que trabajen en `Proyect
 | --- | --- |
 | `index.html` | Entrada pública del sitio. Se genera; no se edita a mano. |
 | `web/index.template.html`, `web/scene.css`, `web/scene.js` | Plantilla, escena de la mesa e interacciones de sus objetos. |
+| `web/atlas.css`, `web/atlas.js`, `web/notebook.css`, `web/notebook.js`, `web/credential.css`, `web/credential.js` | Atlas, cuaderno con logros y credencial cívica ilustrativa. |
 | `web/explorer.html`, `web/explorer.css`, `web/explorer.js` | Mapa estatal, filtros, historias y tabla comparativa. |
 | `web/styles.css`, `web/data-engine.js`, `web/game-content.js` | Estilos base, cálculos compartidos y contenidos de los juegos. |
 | `assets/imgs/` | Fondo, cartas de lotería y cubierta del cuaderno. |
@@ -33,15 +34,15 @@ Los CSV crudos de `Datos/` no forman parte del sitio ni están garantizados en e
 
 ## Interfaz implementada
 
-La escena es una mesa ilustrada que se acerca con el scroll hasta un límite. En ella están el mapa escolar, cuatro cartas de lotería, el cuaderno, el balero, la pirinola y los dados. Cada objeto se abre en un diálogo y vuelve a la mesa. Conserva el diseño, las animaciones, la proporción de los objetos y la separación entre ellos en móvil y escritorio salvo que la tarea pida cambiarlos.
+La escena es una mesa ilustrada que se acerca con el scroll hasta un límite. En ella están el mapa escolar, la credencial cívica de ejemplo, cuatro cartas sueltas, dos cartones de lotería, el cuaderno, el Atlas, el balero, la pirinola y los dados. Cada objeto se abre en un diálogo y vuelve a la mesa. Conserva el diseño, las animaciones, la proporción de los objetos y la separación entre ellos en móvil y escritorio salvo que la tarea pida cambiarlos.
 
 El mapa ampliado presenta historias en pestañas a la izquierda, un mapa estatal y una tabla comparativa al centro, y filtros a la derecha. Los filtros permiten elegir rangos de grupos de edad y varios sexos, zonas y años. Ningún estado está seleccionado al abrir; el usuario puede elegir varios, seleccionar los 32 o restablecer el mapa. El mapa colorea la participación ordinaria según el perfil elegido. La tabla compara los estados y, cuando corresponde, desglosa los sexos y las zonas elegidos. El detalle municipal ya no se publica en esta vista; el cubo sigue disponible en `output/` para análisis futuros. Las 32 claves `EDOCVE` deben seguir mapeadas una a una; las 84 piezas SVG incluyen islas. El contorno seleccionado debe dibujarse completo sobre los estados vecinos.
 
 La vinculación geográfica tiene pruebas y una huella del SVG de origen. Si una tarea requiere cambiar el mapa o `vinculacion_edocve.json`, verifica otra vez las 32 claves, las 84 piezas y el contorno antes de regenerar el sitio.
 
-Las cartas abren cuatro historias con anverso y reverso. El balero conserva ocho preguntas con animaciones de acierto y fallo. La pirinola tiene seis caras de dificultad, dos por nivel, y ocho preguntas por nivel distintas de las del balero. Los dos dados muestran MITO o VERDAD y presentan dos historias distintas en cada tirada. El cuaderno contiene la guía existente. Atlas, credencial y cartones con frijoles son ideas futuras: no los describas como funciones ya publicadas.
+Las cartas abren cuatro historias con anverso y reverso. La lotería usa 18 cartas y tableros de 3 × 3 o 4 × 4, a solas o contra la máquina. El balero conserva ocho preguntas con animaciones de acierto y fallo. La pirinola tiene seis caras de dificultad, dos por nivel, y ocho preguntas por nivel distintas de las del balero. Los dos dados muestran MITO o VERDAD y presentan dos historias distintas en cada tirada. El cuaderno contiene guía, logros guardados solo en el navegador, metodología y equipo. El Atlas presenta siete capítulos con páginas que se pasan desde las esquinas y un selector de año dentro del título cuando hay datos comparables. La credencial cívica es una ilustración editable y descargable, marcada como ejemplo educativo; sus datos personales se procesan en el navegador y no se envían al sitio.
 
-En `assets/imgs/loteria/`, las cartas activas son `18-el-primer-voto.jpg`, `22-la-intermedia.jpg`, `61-la-votante.jpg`, `24-la-inclusion.jpg` y `reverso.jpg`. Otros archivos de esa carpeta pueden ser recursos para trabajo posterior. Los `.glb` y las texturas de `assets/modelos-3d/` son recursos fuente; el build actual publica los tres scripts WebGL que usa el sitio.
+En `assets/imgs/loteria/` están las 18 cartas numeradas, sus vistas previas, el reverso y la imagen del frijol. Los `.glb` y las texturas de `assets/modelos-3d/` son recursos fuente; el build actual publica los tres scripts WebGL que usa el sitio.
 
 ## Rigor de los datos
 

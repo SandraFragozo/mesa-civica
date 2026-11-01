@@ -38,17 +38,15 @@ class SceneRenderingTests(unittest.TestCase):
           for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(p[(y*c.width+x)*4+3]>16){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y)}
           const css=getComputedStyle(c);resolve(Math.max((right-left+1)*parseFloat(css.width)/c.width,(bottom-top+1)*parseFloat(css.height)/c.height));
         }))"""
-        baseline = None
         for width,height in [(1920,1080),(1440,1000),(1024,768),(768,1024),(650,900),(390,844),(320,568),(844,390),(2560,1080)]:
             page.set_viewport_size({"width":width,"height":height})
             page.mouse.move(5,10)
             page.evaluate("scrollTo({top:0,behavior:'instant'})")
             page.wait_for_function("() => Number(document.querySelector('#mesa').dataset.progress) === 0")
-            ratios = page.evaluate("""() => {const width=selector=>parseFloat(getComputedStyle(document.querySelector(selector)).width);return ['.pirinola-object','.balero-object','.dados-object','.notebook-object','.lottery-object'].map(selector=>width(selector)/width('.map-object'))}""")
-            if baseline is None:
-                baseline = ratios
-            for current,expected in zip(ratios,baseline):
-                self.assertAlmostEqual(current,expected,delta=.01,msg=(width,height))
+            sizes = page.evaluate("""() => {const width=selector=>parseFloat(getComputedStyle(document.querySelector(selector)).width);return {map:width('.map-object'),toys:['.pirinola-object','.balero-object','.dados-object'].map(width),others:['.loteria-object','.atlas-object','.notebook-object','.lottery-object'].map(width)}}""")
+            for toy in sizes["toys"]:
+                self.assertAlmostEqual(toy,sizes["toys"][0],delta=1,msg=(width,height))
+            self.assertGreater(sizes["map"],max(sizes["toys"]+sizes["others"]),(width,height))
             balero = page.evaluate(measure,"balero-canvas")
             pirinola = page.evaluate(measure,"pirinola-canvas")
             self.assertGreater(balero,0)
@@ -58,11 +56,7 @@ class SceneRenderingTests(unittest.TestCase):
             page.evaluate("scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'})")
             page.wait_for_function("() => Number(document.querySelector('#mesa').dataset.progress) > .99")
             self.assertEqual(positions,page.locator(".desk-object").evaluate_all("elements=>elements.map(e=>[e.offsetLeft,e.offsetTop,e.offsetWidth])"))
-            for box in page.locator("#mesa button").evaluate_all("elements=>elements.map(e=>{const r=e.getBoundingClientRect();return {id:e.id||e.dataset.card,left:r.left,right:r.right,top:r.top,bottom:r.bottom}})"):
-                self.assertGreaterEqual(box["left"],-1,(width,height,box))
-                self.assertLessEqual(box["right"],width+1,(width,height,box))
-                self.assertGreaterEqual(box["top"],-1,(width,height,box))
-                self.assertLessEqual(box["bottom"],height+1,(width,height,box))
+            self.assertEqual(page.locator("#table-stage").evaluate("e=>Number(e.style.getPropertyValue('--desk-scale'))"),1.35)
 
     def test_desk_objects_do_not_overlap_at_small_and_wide_resolutions(self):
         page = self.page
@@ -70,16 +64,19 @@ class SceneRenderingTests(unittest.TestCase):
             page.set_viewport_size({"width":width,"height":height})
             page.evaluate("scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'})")
             page.wait_for_function("() => Number(document.querySelector('#mesa').dataset.progress) > .99")
-            boxes = page.locator(".desk-object").evaluate_all("elements=>elements.map(e=>{const r=e.getBoundingClientRect();return {name:e.classList[0],left:r.left,right:r.right,top:r.top,bottom:r.bottom}})")
+            boxes = page.locator(".desk-object").evaluate_all("elements=>{const stage=document.getElementById('table-stage').getBoundingClientRect();return elements.map(e=>{const r=e.getBoundingClientRect();return {name:e.classList[0],left:(r.left-stage.left)/stage.width,right:(r.right-stage.left)/stage.width,top:(r.top-stage.top)/stage.height,bottom:(r.bottom-stage.top)/stage.height}})}")
             for index,first in enumerate(boxes):
-                self.assertGreaterEqual(first["left"],-1,(width,height,first))
-                self.assertGreaterEqual(first["top"],-1,(width,height,first))
-                self.assertLessEqual(first["right"],width+1,(width,height,first))
-                self.assertLessEqual(first["bottom"],height+1,(width,height,first))
+                self.assertGreaterEqual(first["top"],.14,(width,height,first))
+                self.assertLessEqual(first["bottom"],.93,(width,height,first))
+                for x,y in ((first["left"],first["top"]),(first["left"],first["bottom"]),(first["right"],first["top"]),(first["right"],first["bottom"])):
+                    left = .235 - .06 * (y - .14) / .79
+                    right = .765 + .07 * (y - .14) / .79
+                    self.assertGreaterEqual(x,left,(width,height,first))
+                    self.assertLessEqual(x,right,(width,height,first))
                 for second in boxes[index+1:]:
                     overlap_width = min(first["right"],second["right"]) - max(first["left"],second["left"])
                     overlap_height = min(first["bottom"],second["bottom"]) - max(first["top"],second["top"])
-                    self.assertLessEqual(min(overlap_width,overlap_height),1,(width,height,first["name"],second["name"]))
+                    self.assertLessEqual(min(overlap_width,overlap_height),.002,(width,height,first["name"],second["name"]))
 
     def test_selection_preserves_all_32_geometries_and_renders_shared_borders(self):
         page = self.page

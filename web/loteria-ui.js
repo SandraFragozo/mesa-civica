@@ -7,6 +7,22 @@
   let machineTimers = new Set();
   const bean = base + "frijol.png";
 
+  document.querySelectorAll(".loteria-desk-board").forEach((board, index) => {
+    const size = Number(board.dataset.previewSize);
+    const cards = index === 0 ? CivicLoteria.cards.slice(0, size * size) : [...CivicLoteria.cards].reverse().slice(0, size * size);
+    board.style.setProperty("--preview-size", size);
+    board.replaceChildren(...cards.map(card => {
+      const image = document.createElement("img");
+      image.src = base + "preview/" + card.image.replace(/\.jpg$/i, ".png");
+      image.alt = "";
+      image.width = 192;
+      image.height = 257;
+      image.loading = "lazy";
+      image.decoding = "async";
+      return image;
+    }));
+  });
+
   function clearTimers() {
     for (const timer of machineTimers) clearTimeout(timer);
     machineTimers.clear();
@@ -20,6 +36,10 @@
 
   function finish() {
     if (!game.winner) return;
+    if (game.winner === "player") {
+      CivicAchievements.award("loteria_win");
+      if (game.opponent) CivicAchievements.award("machine_win");
+    }
     clearTimers();
     const status = $("loteria-status");
     status.dataset.winner = game.winner;

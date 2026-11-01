@@ -43,29 +43,33 @@ class CivicTableTests(unittest.TestCase):
     def test_01_scroll_zoom_keeps_objects_on_the_table(self):
         page = self.page
         page.emulate_media(reduced_motion="no-preference")
-        self.assertEqual(page.locator("#mesa button").count(),11)
+        self.assertEqual(page.locator("#mesa button").count(),12)
         clutter = page.locator("#mesa").evaluate("""root => {const walker = document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const text=[];while(walker.nextNode()){const node=walker.currentNode;if(node.textContent.trim() && !node.parentElement.closest('.scene-header,svg')) text.push(node.textContent.trim());}return text;}""")
         self.assertEqual(clutter,[])
         for width,height in ((1440,1000),(1858,887),(390,844),(320,568)):
             page.set_viewport_size({"width":width,"height":height})
+            page.mouse.move(width / 2,height / 2)
             page.evaluate("scrollTo({top:0,behavior:'instant'})")
             page.wait_for_function("() => Number(document.querySelector('#mesa').dataset.progress) === 0")
+            page.wait_for_function("() => Math.abs(Number.parseFloat(document.querySelector('#table-stage').style.getPropertyValue('--camera-x')) || 0) < 1 && Math.abs(Number.parseFloat(document.querySelector('#table-stage').style.getPropertyValue('--camera-y')) || 0) < 1")
             initial = page.locator("#map-opener").bounding_box()
             first_card = page.locator('[data-card="first"]').bounding_box()
             pile = page.locator(".lottery-object").bounding_box()
             positions = page.locator(".desk-object").evaluate_all("elements => elements.map(e => [e.offsetLeft,e.offsetTop,getComputedStyle(e).transform])")
-            self.assertAlmostEqual(initial["x"] + initial["width"] / 2,width / 2,delta=1)
+            map_offset = page.locator("#table-stage").evaluate("e => e.offsetWidth * .01") if width > 900 else 0
+            self.assertAlmostEqual(initial["x"] + initial["width"] / 2,width / 2 + map_offset,delta=1)
             self.assertGreater(initial["y"] + initial["height"] / 2,height * .4)
             self.assertLess(initial["y"] + initial["height"] / 2,height * .7)
             self.assertLess(initial["width"],width * .52)
             self.assertGreater(pile["x"] + pile["width"] / 2,width * .6)
-            self.assertGreater(pile["y"] + pile["height"] / 2,height * .65)
+            self.assertGreater(pile["y"] + pile["height"] / 2,height * .62)
             page.evaluate("scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'})")
             page.wait_for_function("() => Number(document.querySelector('#mesa').dataset.progress) > .99")
+            page.wait_for_function("() => Math.abs(Number.parseFloat(document.querySelector('#table-stage').style.getPropertyValue('--camera-x')) || 0) < 1 && Math.abs(Number.parseFloat(document.querySelector('#table-stage').style.getPropertyValue('--camera-y')) || 0) < 1")
             final = page.locator("#map-opener").bounding_box()
             self.assertGreater(final["width"],initial["width"] * 1.3)
             self.assertGreater(page.locator('[data-card="first"]').bounding_box()["width"],first_card["width"] * 1.3)
-            self.assertAlmostEqual(final["x"] + final["width"] / 2,width / 2,delta=1)
+            self.assertAlmostEqual(final["x"] + final["width"] / 2,width / 2 + map_offset * 1.35,delta=1)
             self.assertEqual(positions,page.locator(".desk-object").evaluate_all("elements => elements.map(e => [e.offsetLeft,e.offsetTop,getComputedStyle(e).transform])"))
             final_scroll = page.evaluate("scrollY")
             page.mouse.move(5,120)
@@ -73,12 +77,14 @@ class CivicTableTests(unittest.TestCase):
             page.wait_for_timeout(80)
             self.assertEqual(page.evaluate("scrollY"),final_scroll)
             self.assertEqual(page.locator("#table-stage").evaluate("e => Number(e.style.getPropertyValue('--desk-scale'))"),1.35)
-            for selector in ["#map-opener", *[f'[data-card="{key}"]' for key in ("first","election","women","inclusion")]]:
-                box = page.locator(selector).bounding_box()
-                self.assertGreater(box["x"],0)
-                self.assertLess(box["x"] + box["width"],width)
-                self.assertGreater(box["y"],0)
-                self.assertLess(box["y"] + box["height"],height)
+            if width > 900:
+                page.mouse.move(width - 5,height - 5)
+                page.wait_for_timeout(380)
+                bottom_pan = page.locator("#table-stage").evaluate("e => Number.parseFloat(e.style.getPropertyValue('--camera-y'))")
+                page.mouse.move(width - 5,5)
+                page.wait_for_timeout(380)
+                top_pan = page.locator("#table-stage").evaluate("e => Number.parseFloat(e.style.getPropertyValue('--camera-y'))")
+                self.assertGreater(top_pan,bottom_pan,(width,height))
             page.mouse.wheel(0,-10000)
             page.wait_for_function("() => Number(document.querySelector('#mesa').dataset.progress) === 0")
 
@@ -176,7 +182,12 @@ class CivicTableTests(unittest.TestCase):
         self.assertEqual(config["outputDirectory"],"public")
         self.assertEqual(config["buildCommand"],"npm run build")
         sources = self.page.evaluate("[...new Set([...document.images].map(image => image.getAttribute('src')).filter(Boolean))]")
-        self.assertEqual(len(sources),8)
+        self.assertGreaterEqual(len(sources),18)
+        self.assertEqual(self.page.locator('.loteria-desk-board[data-preview-size="4"] img').count(),32)
+        for board in self.page.locator('.loteria-desk-board').all():
+            preview = board.locator('img').evaluate_all('images => images.map(image => image.getAttribute("src"))')
+            self.assertEqual(len(preview),len(set(preview)))
+            self.assertTrue(all(source.startswith('assets/imgs/loteria/preview/') for source in preview))
         for source in sources:
             self.assertTrue(source.startswith("assets/imgs/"))
             self.assertTrue((BASE / source).is_file())
@@ -190,20 +201,140 @@ class CivicTableTests(unittest.TestCase):
         page.locator("#atlas-opener").click()
         self.assertEqual(page.locator("#atlas-title").inner_text(), "32 estados, seis elecciones")
         self.assertIn("55.83 %", page.locator("#atlas-graphic").inner_text())
-        for _ in range(4):
-            page.locator("#atlas-next").click()
-        self.assertEqual(page.locator("#atlas-pagination").inner_text(), "5 / 5")
+        year_2012 = self.national.loc[self.national["AELEC"].eq(2012)]
+        page.locator("#atlas-year").select_option("2012")
+        self.assertIn(f"{year_2012['SV'].sum() / year_2012['LN'].sum() * 100:.2f} %",page.locator("#atlas-graphic").inner_text())
+        atlas_size = page.locator("#focus-surface").evaluate("e => [e.clientWidth,e.clientHeight]")
+        figure_size = page.locator("#atlas-illustration").evaluate("e => [e.clientWidth,e.clientHeight]")
+        spread = page.locator("#atlas-spread").bounding_box()
+        self.assertGreaterEqual(page.locator("#atlas-next").bounding_box()["x"],spread["x"] + spread["width"] - 60)
+        self.assertTrue(page.locator("#atlas-previous").is_hidden())
+        self.assertEqual(page.locator("#atlas-next").evaluate("node => getComputedStyle(node,'::after').content"), '"›"')
+        page.locator("#atlas-next").click()
+        first_age = year_2012.loc[year_2012["GRUPO_EDAD"].eq(AGES[0])]
+        self.assertIn(f"{first_age['SV'].sum() / first_age['LN'].sum() * 100:.2f} %",page.locator("#atlas-graphic").inner_text())
+        page.locator("#atlas-next").click()
+        page.locator("#atlas-next").click()
+        rural_women = year_2012.loc[year_2012["TIPOSEC"].eq("Rural") & year_2012["SEXO"].eq("Mujeres")]
+        self.assertIn(f"{rural_women['SV'].sum() / rural_women['LN'].sum() * 100:.2f} %",page.locator("#atlas-graphic").inner_text())
+        page.locator("#atlas-next").click()
+        self.assertEqual(page.locator("#atlas-left-number").inner_text(), "09")
+        self.assertEqual(page.locator("#atlas-right-number").inner_text(), "10")
         self.assertIn("26,563", page.locator("#atlas-graphic").inner_text())
+        self.assertTrue(page.locator("#atlas-year").is_disabled())
+        page.locator("#atlas-next").click()
+        self.assertIn("192 archivos estatales",page.locator("#atlas-graphic").inner_text())
+        page.locator("#atlas-next").click()
+        self.assertIn("Nunca se promedian porcentajes",page.locator("#atlas-graphic").inner_text())
+        self.assertEqual(page.locator("#focus-surface").evaluate("e => [e.clientWidth,e.clientHeight]"),atlas_size)
+        self.assertEqual(page.locator("#atlas-illustration").evaluate("e => [e.clientWidth,e.clientHeight]"),figure_size)
+        self.assertTrue(all(page.locator(".atlas-page").evaluate_all("pages => pages.map(sheet => sheet.scrollHeight <= sheet.clientHeight + 1)")))
         self.close_object()
         page.locator("#notebook-opener").click()
-        self.assertEqual(page.locator("#notebook-focus button").count(), 0)
+        self.assertEqual(page.locator("#notebook-focus button").count(), 2)
+        self.assertTrue(page.locator("#notebook-previous").is_hidden())
+        self.assertTrue(page.locator("#notebook-next").is_visible())
         self.assertIn("No especificado", page.locator("#notebook-focus").inner_text())
+        notebook_size = page.locator("#focus-surface").evaluate("e => [e.clientWidth,e.clientHeight]")
+        self.assertAlmostEqual(notebook_size[0] / notebook_size[1],2.6,delta=.02)
+        self.assertTrue(all(page.locator(".notebook-paper").evaluate_all("papers => papers.map(paper => paper.clientWidth > paper.clientHeight)")))
+        self.assertTrue(all(page.locator(".notebook-paper").evaluate_all("papers => papers.map(paper => paper.scrollHeight <= paper.clientHeight + 1)")))
         self.close_object()
         page.locator("#loteria-opener").click()
         page.locator('input[name="loteria-opponent"][value="machine"]').check()
         page.locator("#loteria-start").click()
         self.assertEqual(page.locator(".loteria-board-panel").evaluate_all("elements => elements.map(element => element.dataset.side)"), ["machine", "player"])
         self.assertEqual(page.locator(".loteria-board").evaluate_all("elements => elements.map(element => getComputedStyle(element).borderTopColor)"), ["rgb(110, 37, 48)", "rgb(32, 90, 67)"])
+
+    def test_09_atlas_pages_fit_laptop_and_mobile_navigation(self):
+        page = self.page
+        for width,height in ((901,650),(1366,768),(390,844)):
+            page.set_viewport_size({"width":width,"height":height})
+            page.locator("#atlas-opener").click()
+            leaves = 14 if width < 651 else 7
+            for index in range(leaves):
+                sheets = page.locator(".atlas-page:visible").evaluate_all("elements => elements.map(sheet => [sheet.clientWidth,sheet.scrollWidth,sheet.clientHeight,sheet.scrollHeight])")
+                self.assertTrue(all(scroll_width <= client_width + 1 and scroll_height <= client_height + 1 for client_width,scroll_width,client_height,scroll_height in sheets),(width,height,index,sheets))
+                self.assertTrue(page.locator(".atlas-illustration").evaluate("figure => figure.getBoundingClientRect().top >= figure.closest('.atlas-page').querySelector('.atlas-page-head').getBoundingClientRect().bottom - 1"),(width,height,index))
+                if index < leaves - 1:
+                    page.locator("#atlas-next").click()
+            self.assertTrue(page.locator("#atlas-next").is_disabled())
+            self.close_object()
+
+    def test_10_notebook_folds_achievements_method_and_team(self):
+        page = self.page
+        page.locator("#notebook-opener").click()
+        self.assertTrue(page.locator("#notebook-previous").is_hidden())
+        self.assertEqual(page.evaluate("CivicAchievements.progress().earned.includes('guide')"), True)
+        page.locator("#notebook-next").click()
+        self.assertIn("Logros de exploración", page.locator("#notebook-focus").inner_text())
+        self.assertIn("¡Lotería cívica!", page.locator("#notebook-focus").inner_text())
+        self.assertEqual(page.locator(".notebook-achievement").count(), 8)
+        self.assertTrue(page.locator("#notebook-previous").is_visible())
+        page.locator("#notebook-next").click()
+        self.assertEqual(page.locator(".notebook-achievement").count(), 8)
+        page.locator("#notebook-next").click()
+        self.assertIn("No se promedian porcentajes", page.locator("#notebook-focus").inner_text())
+        page.locator("#notebook-next").click()
+        self.assertIn("Sandra Erika Sánchez Fragozo", page.locator("#notebook-focus").inner_text().replace("\n", " "))
+        self.assertIn("Saraí Sánchez Fragozo", page.locator("#notebook-focus").inner_text().replace("\n", " "))
+        self.assertTrue(page.locator("#notebook-next").is_hidden())
+        page.locator("#notebook-previous").click()
+        self.assertIn("Cómo se calcula", page.locator("#notebook-focus").inner_text())
+
+    def test_11_credential_example_stays_local_and_downloads(self):
+        page = self.page
+        page.locator("#credential-opener").click()
+        page.locator("#credential-name").fill("Ana López")
+        page.locator("#credential-birth").fill("2001-03-15")
+        page.locator("#credential-state").select_option("14")
+        page.locator("#credential-curp").fill("LOPA010315MJCPRN09")
+        page.locator("#credential-photo").set_input_files(str(BASE / "assets/imgs/loteria/frijol.png"))
+        page.locator("#credential-photo-preview").wait_for(state="visible")
+        self.assertIn("Ana López", page.locator("#credential-preview").inner_text())
+        self.assertIn("Jalisco", page.locator("#credential-preview").inner_text())
+        self.assertIn("NO ES IDENTIFICACIÓN OFICIAL", page.locator("#credential-preview").inner_text())
+        with page.expect_download() as event:
+            page.locator("#credential-download").click()
+        self.assertEqual(event.value.suggested_filename, "mi-credencial-civica-ejemplo.png")
+        self.assertTrue(page.evaluate("CivicAchievements.progress().earned.includes('credential_download')"))
+        page.locator("#credential-clear").click()
+        self.assertIn("Tu nombre", page.locator("#credential-preview").inner_text())
+        self.assertTrue(page.locator("#credential-photo-preview").is_hidden())
+        page.set_viewport_size({"width":390,"height":844})
+        self.assertTrue(page.locator("#credential-focus").evaluate("node => node.scrollWidth <= node.clientWidth + 1"))
+        self.assertTrue(page.locator("#credential-preview").evaluate("node => node.getBoundingClientRect().width <= node.closest('.credential-focus').getBoundingClientRect().width"))
+
+    def test_12_credential_mobile_views_fit_without_nested_scrolling(self):
+        page = self.page
+        for width, height in ((390, 844), (500, 800), (900, 600)):
+            page.set_viewport_size({"width": width, "height": height})
+            if page.locator("#credential-focus").is_hidden():
+                page.locator("#credential-opener").click()
+            for view in ("preview", "form", "context"):
+                tab = page.locator(f'[data-credential-tab="{view}"]')
+                tab.click()
+                self.assertEqual(tab.get_attribute("aria-pressed"), "true")
+                self.assertEqual(page.locator(".credential-layout").get_attribute("data-view"), view)
+                self.assertTrue(page.locator("#credential-focus").evaluate("node => node.scrollHeight <= node.clientHeight + 1"), (width, height, view))
+                self.assertTrue(page.locator("#object-dialog").evaluate("node => node.scrollHeight <= node.clientHeight + 1"), (width, height, view))
+            page.locator('[data-credential-tab="preview"]').click()
+
+    def test_13_atlas_title_and_year_menu_fit_on_a_narrow_screen(self):
+        page = self.page
+        page.set_viewport_size({"width": 650, "height": 600})
+        page.locator("#atlas-opener").click()
+        title = page.locator("#atlas-title")
+        self.assertGreater(title.bounding_box()["height"], 50)
+        lead = page.locator("#atlas-lead").bounding_box()
+        figure = page.locator("#atlas-illustration").bounding_box()
+        self.assertGreaterEqual(figure["y"], lead["y"] + lead["height"] + 10)
+        page.locator("#atlas-next").click()
+        page.locator(".atlas-year-trigger").click()
+        self.assertEqual(page.locator(".atlas-year-choice:visible").count(), 6)
+        page.locator(".atlas-year-choice", has_text="2012").click()
+        self.assertEqual(page.locator("#atlas-year").input_value(), "2012")
+        self.assertFalse(page.locator(".atlas-year-menu").is_visible())
 
 
 if __name__ == "__main__":

@@ -66,6 +66,10 @@ class CivicGamesTests(unittest.TestCase):
             seen.add(item)
             success = index % 2 == 0
             page.locator(f'[data-balero-answer="{0 if success else 1}"]').click()
+            self.assertEqual(page.locator('#balero-answers [data-result="correct"]').count(), 1)
+            self.assertEqual(page.locator('#balero-answers [data-result="incorrect"]').count(), 2)
+            self.assertEqual(page.locator('#balero-answers [data-result="correct"]').evaluate("e => getComputedStyle(e).backgroundColor"), "rgb(220, 239, 220)")
+            self.assertEqual(page.locator('#balero-answers [data-result="incorrect"]').first.evaluate("e => getComputedStyle(e).backgroundColor"), "rgb(249, 224, 223)")
             page.locator("#balero-result").wait_for(state="visible")
             self.assertEqual(page.locator("#balero-result").get_attribute("data-success"), str(success).lower())
             self.assertEqual(page.evaluate("window.__tricks.at(-1)"), success)

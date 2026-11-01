@@ -1,11 +1,11 @@
 .loteria-object{left:calc(50% - 34vw / var(--zoom-limit));top:calc(50% - 34svh / var(--zoom-limit));width:calc(var(--toy-size) * .8);transform:translate(-50%,-50%) rotate(-8deg);z-index:2}
-.loteria-desk{display:flex;width:100%;aspect-ratio:1.52;padding:0;border:0;background:transparent;filter:drop-shadow(3px 5px 4px #372c2459);transition:transform 150ms cubic-bezier(.22,1,.36,1)}
+.loteria-desk{display:flex;align-items:center;gap:5%;width:100%;aspect-ratio:1.6;padding:0;border:0;background:transparent;filter:drop-shadow(3px 5px 4px #372c2459);transition:transform 150ms cubic-bezier(.22,1,.36,1)}
 .loteria-desk:hover,.loteria-desk:focus-visible{transform:translateY(-5px) rotate(2deg)}
 .loteria-desk:active{transform:translateY(-2px) scale(.98)}
 .loteria-desk:focus-visible{outline:3px solid #23749a;outline-offset:5px}
-.loteria-desk-board{display:flex;flex-direction:column;gap:3px;width:58%;height:88%;padding:5px;background:#f5d36b;border:3px solid #9e472f;border-radius:3px;box-shadow:2px 4px 5px #34271d40;color:#7d2531;font:800 clamp(8px,.7vw,13px) Jakarta,sans-serif;letter-spacing:.08em;text-align:center}
-.loteria-desk-board+ .loteria-desk-board{margin-left:-16%;margin-top:12%;transform:rotate(12deg);background:#f4e2a1}
-.loteria-desk-grid{display:block;flex:1;background:repeating-linear-gradient(90deg,transparent 0 30%,#b55b2f 30% 32%,transparent 32% 64%,#b55b2f 64% 66%,transparent 66%),repeating-linear-gradient(0deg,transparent 0 30%,#b55b2f 30% 32%,transparent 32% 64%,#b55b2f 64% 66%,transparent 66%);border:1px solid #b55b2f}
+.loteria-desk-board{display:grid;grid-template-columns:repeat(var(--preview-size),minmax(0,1fr));grid-template-rows:repeat(var(--preview-size),minmax(0,1fr));gap:2px;width:47.5%;height:100%;padding:4px;background:#782734;border:3px solid #782734;border-radius:3px;box-shadow:2px 4px 5px #34271d40;overflow:hidden;transform:rotate(-4deg)}
+.loteria-desk-board+ .loteria-desk-board{background:#225943;border-color:#225943;transform:rotate(5deg)}
+.loteria-desk-board img{display:block;width:100%;height:100%;object-fit:cover;min-width:0;pointer-events:none}
 .focus-surface.is-loteria{width:min(1180px,100%);height:auto;max-height:100%;overflow:auto;scrollbar-width:thin}
 .loteria-focus{padding:22px 26px;background:#f7f0d9;border:1px solid #e5d7b6;border-radius:12px;box-shadow:0 20px 60px #101b2259}
 .loteria-focus[hidden],.loteria-setup[hidden],.loteria-play[hidden],.loteria-board-panel[hidden],#loteria-restart[hidden]{display:none}

@@ -27,6 +27,11 @@
   let shadeMotion = null;
   let closing = false;
   let frame = 0;
+  let cursorX = .5;
+  let cursorY = .5;
+  let cameraX = 0;
+  let cameraY = 0;
+  let focusCamera = null;
   let sceneVisible = true;
   let scrollOverflow = "";
   let afterClose = null;
@@ -106,6 +111,7 @@
     const wordA = result.wordA || (Number(result.faceA) % 2 === 1 ? "MITO" : "VERDAD");
     const wordB = result.wordB || (Number(result.faceB) % 2 === 1 ? "MITO" : "VERDAD");
     const stories = dadosRoller.draw(wordA, wordB);
+    CivicAchievements.record("dice", `${wordA}+${wordB}`);
     $("dados-result").dataset.combo = `${wordA}+${wordB}`;
     $("dados-result").dataset.wordA = wordA;
     $("dados-result").dataset.wordB = wordB;
@@ -317,9 +323,23 @@
     const distance = $("mesa").offsetHeight - document.querySelector(".scene-viewport").offsetHeight;
     const progress = Math.max(0, Math.min(1, -$("mesa").getBoundingClientRect().top / Math.max(1, distance)));
     const zoom = reduced.matches ? (progress > .5 ? zoomLimit : 1) : 1 + (zoomLimit - 1) * progress;
+    const maxPanX = Math.max(0, (stage.offsetWidth * zoom - window.innerWidth) / 2);
+    const maxPanY = Math.max(0, (stage.offsetHeight * zoom - window.innerHeight) / 2);
+    const gain = Math.max(0, Math.min(1, (progress - .18) / .82));
+    const pointerPan = matchMedia("(hover: hover) and (pointer: fine)").matches && !reduced.matches;
+    const targetX = focusCamera ? Math.max(-maxPanX, Math.min(maxPanX, focusCamera.x * gain)) : pointerPan ? (0.5 - cursorX) * 2 * maxPanX * gain : 0;
+    const targetY = focusCamera ? Math.max(-maxPanY, Math.min(maxPanY, focusCamera.y * gain)) : pointerPan ? (0.5 - cursorY) * 2 * maxPanY * gain : 0;
+    const step = reduced.matches ? 1 : .18;
+    cameraX += (targetX - cameraX) * step;
+    cameraY += (targetY - cameraY) * step;
+    if (Math.abs(targetX - cameraX) < .3) cameraX = targetX;
+    if (Math.abs(targetY - cameraY) < .3) cameraY = targetY;
     stage.style.setProperty("--desk-scale", zoom.toFixed(4));
-    stage.style.willChange = progress > 0 && progress < 1 && !reduced.matches ? "transform" : "auto";
+    stage.style.setProperty("--camera-x", `${cameraX.toFixed(2)}px`);
+    stage.style.setProperty("--camera-y", `${cameraY.toFixed(2)}px`);
+    stage.style.willChange = progress > 0 && !reduced.matches ? "transform" : "auto";
     $("mesa").dataset.progress = progress.toFixed(3);
+    if (Math.abs(targetX - cameraX) >= .3 || Math.abs(targetY - cameraY) >= .3) scheduleDesk();
   }
 
   function scheduleDesk() {
@@ -472,6 +492,7 @@
     surface.classList.toggle("is-dados", kind === "dados");
     surface.classList.toggle("is-notebook", kind === "notebook");
     surface.classList.toggle("is-atlas", kind === "atlas");
+    surface.classList.toggle("is-credential", kind === "credential");
     surface.classList.toggle("is-loteria", kind === "loteria");
     $("map-focus").hidden = kind !== "map";
     $("card-focus").hidden = kind !== "card";
@@ -480,6 +501,7 @@
     $("dados-focus").hidden = kind !== "dados";
     $("notebook-focus").hidden = kind !== "notebook";
     $("atlas-focus").hidden = kind !== "atlas";
+    $("credential-focus").hidden = kind !== "credential";
     $("loteria-focus").hidden = kind !== "loteria";
     if (kind === "dados") {
       $("dados-canvas-mount").append($("dados-canvas"));
@@ -516,7 +538,7 @@
     }
     dialog.dataset.object = kind;
     dialog.dataset.animating = String(!reduced.matches);
-    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : kind === "loteria" ? "loteria-title" : kind === "atlas" ? "atlas-title" : "notebook-title");
+    dialog.setAttribute("aria-labelledby", kind === "map" ? "object-title" : kind === "card" ? "card-title" : kind === "pirinola" ? "pirinola-title" : kind === "balero" ? "balero-title" : kind === "dados" ? "dados-title" : kind === "loteria" ? "loteria-title" : kind === "atlas" ? "atlas-title" : kind === "credential" ? "credential-title" : "notebook-title");
     if (kind === "card") showCard(key);
     scrollOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
@@ -532,6 +554,7 @@
     }
     syncDados();
     if (kind === "map") document.dispatchEvent(new CustomEvent("civic:map-open"));
+    if (kind === "notebook") document.dispatchEvent(new CustomEvent("civic:notebook-open"));
     if (kind === "loteria") document.dispatchEvent(new CustomEvent("civic:loteria-open"));
     if (kind === "pirinola") preparePirinola();
     if (kind === "balero") { syncBalero(); prepareBalero(); }
@@ -539,6 +562,7 @@
 
   function flipCard() {
     const flipped = $("flip-card").classList.toggle("is-flipped");
+    if (flipped) CivicAchievements.award("card_flip");
     $("flip-card").setAttribute("aria-pressed", String(flipped));
     $("flip-card").setAttribute("aria-label", flipped ? "Ver ilustración de la carta" : `Dar la vuelta a ${cards[currentCard].title}`);
     $("flip-card").querySelector(".card-front").setAttribute("aria-hidden", String(flipped));
@@ -551,6 +575,7 @@
 
   $("notebook-opener").addEventListener("click", openNotebook, { signal });
   $("atlas-opener").addEventListener("click", openAtlas, { signal });
+  $("credential-opener").addEventListener("click", () => openObject("credential", $("credential-opener")), { signal });
   $("dados-opener").addEventListener("click", () => openObject("dados", $("dados-opener")), { signal });
   $("dados-roll").addEventListener("click", () => {
     if (!dadosViewer || $("dados-roll").disabled || closing) return;
@@ -571,9 +596,15 @@
     if (!button) return;
     if (!baleroViewer || $("balero-question").disabled) return;
     const success = button.dataset.baleroAnswer === baleroQuestion.correct;
+    if (success) CivicAchievements.record("balero", baleroQuestion.id);
     baleroAnswered = true;
     button.setAttribute("aria-pressed", "true");
     $("balero-question").disabled = true;
+    $("balero-answers").querySelectorAll("button").forEach(option => {
+      const correct = option.dataset.baleroAnswer === baleroQuestion.correct;
+      option.dataset.result = correct ? "correct" : "incorrect";
+      option.setAttribute("aria-label", `${option.textContent}, ${correct ? "respuesta correcta" : "respuesta incorrecta"}`);
+    });
     baleroViewer.setPose("showcase", reduced.matches);
     baleroTimer = setTimeout(() => {
       if (!dialog.open || dialog.dataset.object !== "balero") return;
@@ -588,6 +619,7 @@
     const button = event.target.closest("[data-pirinola-answer]");
     if (!button || !pirinolaQuestion || $("pirinola-question").disabled) return;
     const success = button.dataset.pirinolaAnswer === pirinolaQuestion.correct;
+    if (success) CivicAchievements.record("pirinola", pirinolaQuestion.id);
     $("pirinola-question").disabled = true;
     button.setAttribute("aria-pressed", "true");
     $("pirinola-answers").querySelectorAll("button").forEach(option => {
@@ -643,6 +675,20 @@
   document.addEventListener("civic:card-facts", event => { facts = event.detail; if (dialog.open && dialog.dataset.object === "card") showCard(currentCard); }, { signal });
   window.addEventListener("scroll", scheduleDesk, { passive: true, signal });
   window.addEventListener("resize", scheduleDesk, { passive: true, signal });
+  window.addEventListener("pointermove", event => {
+    if (dialog.open || !["mouse", "pen"].includes(event.pointerType)) return;
+    cursorX = Math.max(0, Math.min(1, event.clientX / window.innerWidth));
+    cursorY = Math.max(0, Math.min(1, event.clientY / window.innerHeight));
+    focusCamera = null;
+    scheduleDesk();
+  }, { passive: true, signal });
+  stage.addEventListener("focusin", event => {
+    const object = event.target.closest(".desk-object");
+    if (!object || dialog.open) return;
+    const zoom = Number(stage.style.getPropertyValue("--desk-scale")) || 1;
+    focusCamera = { x: (stage.offsetWidth / 2 - object.offsetLeft) * zoom, y: (stage.offsetHeight / 2 - object.offsetTop) * zoom };
+    scheduleDesk();
+  }, { signal });
   reduced.addEventListener("change", () => {
     if (motion) {
       if (closing) finishClose();

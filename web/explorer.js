@@ -199,6 +199,14 @@
   map.addEventListener("focusout", hideTip);
   $("simple-select-all").addEventListener("click", () => { states.forEach(group => selected.add(Number(group.dataset.edocve))); render(); });
   $("simple-clear").addEventListener("click", () => { selected.clear(); render(); });
+  $("simple-reset-filters").addEventListener("click", () => {
+    document.querySelectorAll(".simple-filters input").forEach(input => {
+      if (input.type === "checkbox") input.checked = input.defaultChecked;
+      else input.value = input.defaultValue;
+    });
+    hideTip();
+    render();
+  });
   $("simple-age-min").addEventListener("input", () => { if (Number($("simple-age-min").value) > Number($("simple-age-max").value)) $("simple-age-max").value = $("simple-age-min").value; });
   $("simple-age-max").addEventListener("input", () => { if (Number($("simple-age-max").value) < Number($("simple-age-min").value)) $("simple-age-min").value = $("simple-age-max").value; });
   document.querySelector(".simple-range").addEventListener("click", event => {

@@ -1,0 +1,40 @@
+.notebook-spread{position:relative;perspective:1200px}
+.notebook-paper{backface-visibility:hidden;transform-style:preserve-3d}
+.notebook-fold{position:absolute;right:0;bottom:0;z-index:5;width:58px;height:58px;padding:0;border:0;background:transparent;cursor:pointer;transition:transform 150ms cubic-bezier(.22,1,.36,1),filter 150ms cubic-bezier(.22,1,.36,1)}
+.notebook-fold::before{content:"";position:absolute;inset:0;clip-path:polygon(0 100%,100% 0,100% 100%);background:linear-gradient(135deg,#c2ac83 0%,#f4e9cc 48%,#cfba92 100%);filter:drop-shadow(-3px -3px 3px #67543955)}
+.notebook-fold::after{content:"›";position:absolute;right:8px;bottom:3px;color:#92333a;font:800 25px Jakarta,sans-serif}
+.notebook-fold-previous{left:0;right:auto;transform:scaleX(-1)}
+.notebook-fold-next:hover,.notebook-fold-next:focus-visible{transform:translate(-3px,-3px)}
+.notebook-fold-previous:hover,.notebook-fold-previous:focus-visible{transform:scaleX(-1) translate(-3px,-3px)}
+.notebook-fold-next:active{transform:translate(-1px,-1px) scale(.97)}
+.notebook-fold-previous:active{transform:scaleX(-1) translate(-1px,-1px) scale(.97)}
+.notebook-fold:focus-visible{outline:4px solid #23749a;outline-offset:3px}
+.notebook-fold[hidden]{display:none}
+.notebook-paper .notebook-kicker{margin:0 0 4px;color:#92333a;font:700 11px JetBrains,monospace;letter-spacing:.06em;text-transform:uppercase}
+.notebook-paper .notebook-lead{margin:0 0 15px;font-size:13px;line-height:1.5}
+.notebook-achievements{display:grid;grid-template-columns:1fr;gap:9px;line-height:1.2}
+.notebook-achievement{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:10px;min-width:0;padding:6px 9px;background:#fff9e8d9;border:1px solid #d9c9a5;border-radius:5px}
+.notebook-achievement[data-earned="false"]{opacity:.65}
+.notebook-achievement[data-earned="true"]{border-color:#88a484;background:#f2f8e9}
+.notebook-achievement strong,.notebook-achievement small,.notebook-achievement em{display:block;line-height:1.3}
+.notebook-achievement strong{font-size:15px;color:#293c43}
+.notebook-achievement small{margin-top:2px;font-size:12px}
+.notebook-achievement em{margin-top:2px;color:#625b4e;font-size:10px;font-style:normal}
+.notebook-badge{display:grid;place-items:center;width:42px;height:42px;background:var(--badge-color);color:#fffaf0;font:800 21px Jakarta,sans-serif;box-shadow:inset 0 1px 0 #ffffff55,1px 3px 4px #493b2b33}
+.notebook-badge[data-shape="círculo"]{border-radius:50%}
+.notebook-badge[data-shape="rombo"]{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.notebook-badge[data-shape="hexágono"]{clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%)}
+.notebook-badge[data-shape="escudo"]{clip-path:polygon(10% 0,90% 0,90% 65%,50% 100%,10% 65%)}
+.notebook-badge[data-shape="estrella"]{clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 95%,50% 73%,21% 95%,32% 57%,2% 35%,39% 35%)}
+.notebook-badge[data-shape="cuadro"]{border-radius:5px}
+.notebook-method p{margin:0 0 12px;font-size:14px;line-height:1.55}
+.notebook-method strong{color:#92333a}
+.notebook-equation{display:block;margin:10px 0 14px;padding:8px 12px;border:1px solid #d4bd8a;border-radius:4px;background:#fff7df;font:700 14px JetBrains,monospace;line-height:1.45}
+.notebook-team{display:flex;flex-direction:column;justify-content:center;min-height:78%;text-align:center}
+.notebook-team .notebook-kicker{text-align:center;font-size:16px;line-height:1.25;letter-spacing:.04em}
+.notebook-team h2,.notebook-team h3{margin:8px 0 12px;font-size:clamp(26px,3vw,42px)}
+.notebook-team p{margin:0 auto;max-width:38ch;font-size:15px;line-height:1.6}
+.notebook-team-mark{display:grid;place-items:center;width:92px;height:92px;margin:31px auto 13px;border:2px solid #92333a;border-radius:50%;background:#f4e1ba;color:#92333a;font:800 28px Jakarta,sans-serif}
+@media(max-width:1100px){.notebook-achievement{grid-template-columns:40px minmax(0,1fr);gap:7px;padding:7px}.notebook-badge{width:38px;height:38px;font-size:17px}.notebook-achievement strong{font-size:13px}.notebook-achievement small{font-size:11px}.notebook-achievement em{font-size:10px}}
+@media(max-width:650px){.notebook-fold-previous{top:calc((100vw - 34px) / 1.28 - 58px);bottom:auto}.notebook-achievements{gap:6px}.notebook-achievement{padding:4px}.notebook-paper .notebook-lead{font-size:11px}.notebook-method p{font-size:12px}.notebook-team .notebook-kicker{font-size:13px}.notebook-team-mark{margin-top:20px}}
+@media(prefers-reduced-motion:reduce){.notebook-fold{transition:none}}
