@@ -78,6 +78,15 @@ class SceneRenderingTests(unittest.TestCase):
                     overlap_height = min(first["bottom"],second["bottom"]) - max(first["top"],second["top"])
                     self.assertLessEqual(min(overlap_width,overlap_height),.002,(width,height,first["name"],second["name"]))
 
+    def test_credential_label_fits_its_mobile_band(self):
+        for width,height in [(320,568),(375,667),(390,844),(430,932)]:
+            self.page.set_viewport_size({"width":width,"height":height})
+            placement = self.page.locator(".credential-desk-seal").evaluate("e=>({top:e.offsetTop,bottom:e.offsetTop+e.offsetHeight,left:e.offsetLeft,right:e.offsetLeft+e.offsetWidth,bandHeight:e.parentElement.querySelector('.credential-desk-band').offsetHeight,cardWidth:e.parentElement.offsetWidth})")
+            self.assertGreaterEqual(placement["top"],0,(width,height,placement))
+            self.assertLessEqual(placement["bottom"],placement["bandHeight"],(width,height,placement))
+            self.assertGreaterEqual(placement["left"],0,(width,height,placement))
+            self.assertLessEqual(placement["right"],placement["cardWidth"],(width,height,placement))
+
     def test_selection_preserves_all_32_geometries_and_renders_shared_borders(self):
         page = self.page
         page.locator("#map-opener").click()
